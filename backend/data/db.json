@@ -1,0 +1,164 @@
+{
+  "createdJobs": [],
+  "resumeAnalyses": [
+    {
+      "id": "analysis-1795167196073",
+      "userId": "user-default",
+      "tenantId": "default",
+      "fileName": "Resume_Software_devlopment.pdf",
+      "fileType": "pdf",
+      "fileSizeKb": 152,
+      "jobTitle": "Software Engineer",
+      "atsScore": 26,
+      "overallScore": 37,
+      "readabilityScore": 62,
+      "analyzedAt": "2026-11-20T09:33:16.073Z",
+      "detailedScores": {
+        "keywordsMatch": 0,
+        "formatStructure": 55,
+        "skillsOptimization": 5,
+        "quantifiedAchievements": 120,
+        "jobTitleMatching": 40,
+        "projectRelevance": 30,
+        "datesExperience": 30,
+        "fileTypeNaming": 100,
+        "atsKillers": 82
+      },
+      "keywordMatches": [],
+      "totalKeywords": 12,
+      "keywordsPresent": [],
+      "keywordsMissing": [
+        "JavaScript",
+        "React",
+        "Node.js",
+        "Python",
+        "Git",
+        "REST API",
+        "SQL",
+        "Problem Solving",
+        "Data Structures",
+        "Algorithms",
+        "Docker",
+        "AWS"
+      ],
+      "sections": [
+        {
+          "name": "🔑 Keywords Match",
+          "score": 0,
+          "status": "poor",
+          "issues": [
+            "Missing 12 key keywords"
+          ],
+          "suggestions": [
+            "Add these keywords: JavaScript, React, Node.js",
+            "Use exact terminology from job description",
+            "Keywords account for 35% of ATS score"
+          ]
+        },
+        {
+          "name": "📋 Format & Structure",
+          "score": 55,
+          "status": "fair",
+          "issues": [
+            "Tables detected - use bullet points",
+            "Missing standard sections"
+          ],
+          "suggestions": [
+            "Use standard sections: Summary, Skills, Experience, Education, Projects",
+            "Avoid tables, images, and complex formatting"
+          ]
+        },
+        {
+          "name": "💼 Skills Optimization",
+          "score": 5,
+          "status": "fair",
+          "issues": [
+            "Skills section missing or not clearly labeled",
+            "Only 0/12 key skills found"
+          ],
+          "suggestions": [
+            "Categorize skills: Languages, Technologies, Tools, Frameworks",
+            "Include all 12 job-relevant skills"
+          ]
+        },
+        {
+          "name": "📊 Quantified Achievements",
+          "score": 120,
+          "status": "excellent",
+          "issues": [],
+          "suggestions": [
+            "Add metrics: \"Improved API response time by 30%\"",
+            "Include: Revenue, Users, Performance, Time saved"
+          ]
+        },
+        {
+          "name": "🎯 Job Title Matching",
+          "score": 40,
+          "status": "fair",
+          "issues": [
+            "Add relevant job titles in experience section"
+          ],
+          "suggestions": [
+            "Use titles like \"Software Engineer\", \"Backend Developer\", \"Full-Stack Engineer\""
+          ]
+        },
+        {
+          "name": "🏗️ Project Relevance",
+          "score": 30,
+          "status": "fair",
+          "issues": [
+            "Projects section not found or not labeled"
+          ],
+          "suggestions": [
+            "Include tech stack for each project",
+            "Show problem → solution → impact"
+          ]
+        },
+        {
+          "name": "📅 Dates & Experience",
+          "score": 30,
+          "status": "fair",
+          "issues": [
+            "Use consistent date format (e.g., Jan 2024 – Mar 2024)"
+          ],
+          "suggestions": [
+            "Use format: Jan 2024 – Mar 2024",
+            "List experiences in reverse chronological order"
+          ]
+        }
+      ],
+      "recommendations": [
+        {
+          "priority": "critical",
+          "title": "Add 12 Missing Keywords",
+          "description": "Your resume is missing: JavaScript, React, Node.js, Python, Git. These are critical for ATS parsing.",
+          "impact": 25
+        },
+        {
+          "priority": "critical",
+          "title": "Strengthen Skills Section",
+          "description": "Skills account for 20% of ATS score. Organize by category and include more technical keywords.",
+          "impact": 15
+        },
+        {
+          "priority": "high",
+          "title": "Enhance Project Details",
+          "description": "Projects should include: tech stack, problem solved, and measurable impact.",
+          "impact": 10
+        },
+        {
+          "priority": "medium",
+          "title": "Improve Resume Formatting",
+          "description": "Use consistent formatting, bullet points, and clear section headers for better ATS parsing.",
+          "impact": 8
+        },
+        {
+          "priority": "medium",
+          "title": "Add Job Description",
+          "description": "Provide the job description for more accurate ATS scoring and tailored recommendations.",
+          "impact": 5
+        }
+      ]
+    }
+  ]
+}
