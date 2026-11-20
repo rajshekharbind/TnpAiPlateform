@@ -1,0 +1,177 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Light Mode Colors */
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Dark Mode Colors */
+  --color-charcoal: #0f1117;
+  --color-charcoal-light: #1a1d29;
+  --color-charcoal-lighter: #252936;
+  
+  /* Primary Colors */
+  --color-blue: #5b8def;
+  --color-blue-dark: #4a7dd4;
+  --color-blue-light: #6b9df5;
+  
+  /* Secondary Colors */
+  --color-teal: #4db8a8;
+  --color-teal-dark: #3d9989;
+  
+  /* Status Colors */
+  --color-green: #52c07f;
+  --color-green-dark: #42a66f;
+  --color-yellow: #f0b429;
+  --color-yellow-dark: #d9a220;
+  --color-red: #ef5b5b;
+  --color-red-dark: #d44a4a;
+  
+  /* Neutral Colors */
+  --color-gray: #4a5568;
+  --color-gray-light: #6b7280;
+  --color-gray-lighter: #9ca3af;
+
+  /* Typography Scale */
+  --text-heading: 1.25rem;
+  --text-body: 0.875rem;
+  --text-small: 0.75rem;
+
+  /* Spacing System */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* Light Mode Design System */
+  --font-size: 14px;
+  --background: var(--color-white);
+  --foreground: var(--color-gray-900);
+  --card: var(--color-white);
+  --card-foreground: var(--color-gray-900);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-gray-900);
+  --primary: var(--color-blue);
+  --primary-foreground: var(--color-white);
+  --secondary: var(--color-gray-100);
+  --secondary-foreground: var(--color-gray-900);
+  --muted: var(--color-gray-500);
+  --muted-foreground: var(--color-gray-600);
+  --accent: var(--color-teal);
+  --accent-foreground: var(--color-white);
+  --destructive: var(--color-red);
+  --destructive-foreground: var(--color-white);
+  --border: var(--color-gray-200);
+  --input: var(--color-gray-300);
+  --input-background: var(--color-white);
+  --ring: var(--color-blue);
+  --radius: 0.25rem;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+}
+
+.dark {
+  /* Dark Mode Design System */
+  --background: var(--color-charcoal);
+  --foreground: #e8eaed;
+  --card: var(--color-charcoal-light);
+  --card-foreground: #e8eaed;
+  --popover: var(--color-charcoal-lighter);
+  --popover-foreground: #e8eaed;
+  --primary: var(--color-blue);
+  --primary-foreground: var(--color-charcoal);
+  --secondary: var(--color-charcoal-lighter);
+  --secondary-foreground: #e8eaed;
+  --muted: var(--color-gray);
+  --muted-foreground: #b4b9c3;
+  --accent: var(--color-teal);
+  --accent-foreground: var(--color-charcoal);
+  --destructive: var(--color-red);
+  --destructive-foreground: #e8eaed;
+  --border: #2d3340;
+  --input: #3a4050;
+  --input-background: var(--color-charcoal-lighter);
+  --ring: var(--color-blue);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-ring: var(--ring);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: var(--text-body);
+    line-height: 1.6;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  h1, h2 {
+    font-size: var(--text-heading);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.4;
+    color: var(--foreground);
+  }
+
+  h3, h4 {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+    color: var(--foreground);
+  }
+
+  p, label, button, input, select, textarea {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+    color: var(--foreground);
+  }
+
+  small, .text-small {
+    font-size: var(--text-small);
+    line-height: 1.4;
+    color: var(--muted-foreground);
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+}
