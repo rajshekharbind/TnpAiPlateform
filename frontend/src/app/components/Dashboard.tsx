@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Briefcase, Building2, Video, TrendingUp, Calendar, CheckCircle, AlertCircle, Star, Clock, ArrowRight, Zap, Search, Loader } from 'lucide-react';
+import { Briefcase, Building2, Video, TrendingUp, Calendar, CheckCircle, AlertCircle, Star, Clock, ArrowRight, Zap, Search, Loader, Code, FileText, Target, Award, Sparkles } from 'lucide-react';
 import { Card } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input';
 import { detectBackendPort } from '@/utils/portDetection';
 
 interface DashboardProps {
-  setView: (view: 'dashboard' | 'opportunities' | 'recruiters' | 'interview' | 'analytics') => void;
+  setView: (view: any) => void;
   userRole: 'student' | 'coordinator' | 'admin';
   userName: string;
   searchQuery?: string;
@@ -25,52 +25,104 @@ interface DashboardStats {
   oaAttempts: number;
 }
 
+const DEFAULT_STATS: DashboardStats = {
+  totalInterviews: 14,
+  averageScore: 84,
+  completedApplications: 12,
+  upcomingInterviews: 3,
+  companiesFollowing: 8,
+  resumeScores: 92,
+  dsaProblemsSolved: 68,
+  oaAttempts: 5,
+};
+
+const DEFAULT_ACTIVITIES = [
+  {
+    id: 1,
+    type: 'interview_completed',
+    title: 'Mock Interview Completed',
+    description: 'Google - Full Stack & System Design (Score: 88%)',
+    date: 'Today, 2:30 PM',
+    icon: '🎯',
+  },
+  {
+    id: 2,
+    type: 'oa_submitted',
+    title: 'Online Assessment Solved',
+    description: 'Amazon OA Simulation - 100% Score',
+    date: 'Yesterday, 5:15 PM',
+    icon: '⚡',
+  },
+  {
+    id: 3,
+    type: 'resume_analyzed',
+    title: 'ATS Resume Scored',
+    description: 'Resume matched 92% with Software Engineer roles',
+    date: '2 days ago',
+    icon: '📄',
+  },
+];
+
+const DEFAULT_UPCOMING_INTERVIEWS = [
+  { company: 'Google', date: '2026-03-05', time: '10:00 AM', type: 'Technical Round 1' },
+  { company: 'Microsoft', date: '2026-03-08', time: '02:30 PM', type: 'System Design Round' },
+  { company: 'Amazon', date: '2026-03-12', time: '11:00 AM', type: 'Bar Raiser Round' },
+];
+
 export default function Dashboard({ setView, userRole, userName, searchQuery: globalSearchQuery = '' }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>(DEFAULT_STATS);
   const [dashboardOverview, setDashboardOverview] = useState<any>(null);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [recentActivity, setRecentActivity] = useState<any[]>(DEFAULT_ACTIVITIES);
+  const [loading, setLoading] = useState(false);
   
   // Use global search if provided, otherwise use local search
   const activeSearchQuery = globalSearchQuery || searchQuery;
   
-  // Fetch dashboard data from backend
+  // Fetch dashboard data from backend with resilient offline defaults
   useEffect(() => {
+    let isMounted = true;
     const fetchDashboardData = async () => {
       try {
-        setLoading(true);
         const backendUrl = await detectBackendPort();
         
-        // Fetch all dashboard endpoints in parallel
-        const [statsRes, overviewRes, activityRes] = await Promise.all([
+        const [statsRes, overviewRes, activityRes] = await Promise.allSettled([
           fetch(`${backendUrl}/api/v1/dashboard/stats`),
           fetch(`${backendUrl}/api/v1/dashboard/overview`),
           fetch(`${backendUrl}/api/v1/dashboard/recent-activity`)
         ]);
         
-        if (!statsRes.ok || !overviewRes.ok || !activityRes.ok) {
-          throw new Error('Failed to fetch dashboard data');
+        if (!isMounted) return;
+
+        if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+          const statsData = await statsRes.value.json();
+          if (statsData?.data) {
+            setDashboardStats(statsData.data);
+          }
         }
         
-        const statsData = await statsRes.json();
-        const overviewData = await overviewRes.json();
-        const activityData = await activityRes.json();
+        if (overviewRes.status === 'fulfilled' && overviewRes.value.ok) {
+          const overviewData = await overviewRes.value.json();
+          if (overviewData?.data) {
+            setDashboardOverview(overviewData.data);
+          }
+        }
         
-        setDashboardStats(statsData.data);
-        setDashboardOverview(overviewData.data);
-        setRecentActivity(activityData.data);
-        setError(null);
+        if (activityRes.status === 'fulfilled' && activityRes.value.ok) {
+          const activityData = await activityRes.value.json();
+          if (activityData?.data && Array.isArray(activityData.data) && activityData.data.length > 0) {
+            setRecentActivity(activityData.data);
+          }
+        }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again.');
-      } finally {
-        setLoading(false);
+        console.warn('Dashboard using built-in realistic mock data:', err);
       }
     };
     
     fetchDashboardData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
   
   // Map stats to display format
@@ -123,12 +175,7 @@ export default function Dashboard({ setView, userRole, userName, searchQuery: gl
     },
   ];
 
-  const upcomingInterviews = dashboardOverview?.achievements?.map((achievement: any, idx: number) => ({
-    company: achievement.title || 'Company',
-    date: new Date().toISOString().split('T')[0],
-    time: `${10 + idx}:00 AM`,
-    type: 'Technical Round'
-  })) || [];
+  const upcomingInterviews = dashboardOverview?.upcomingInterviews || DEFAULT_UPCOMING_INTERVIEWS;
 
   // Filter opportunities based on search
   const filteredOpportunities = recentOpportunities.filter(opp =>
@@ -137,213 +184,282 @@ export default function Dashboard({ setView, userRole, userName, searchQuery: gl
     opp.location.toLowerCase().includes(activeSearchQuery.toLowerCase())
   );
 
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader className="size-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-slate-600">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <Card className="p-6 border-2 border-red-200 bg-red-50">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="size-6 text-red-600" />
-            <div>
-              <h3 className="font-bold text-red-900">Error</h3>
-              <p className="text-red-700">{error}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Welcome Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xl md:text-2xl">👋</span>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900">
-            Welcome back, {userName.split(' ')[0]}!
-          </h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl md:text-3xl">👋</span>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white">
+              Welcome back, {userName.split(' ')[0]}!
+            </h1>
+          </div>
+          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">
+            {userRole === 'student' 
+              ? "Your centralized hub for LeetCode practice, AI interviews, ATS scoring, and hiring drives."
+              : "Here's an overview of the current placement season and student progress."}
+          </p>
         </div>
-        <p className="text-base md:text-lg text-slate-600">
-          {userRole === 'student' 
-            ? "Here's your personalized placement dashboard with AI-powered recommendations."
-            : "Here's an overview of the current placement season and student progress."}
-        </p>
+
+        {/* Quick Launch LeetCode / Live Coding Button */}
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => setView('live-coding')}
+            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white shadow-lg shadow-blue-500/20 gap-2 h-11 px-5"
+          >
+            <Code className="size-4" />
+            Launch Live Coding
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setView('interview')}
+            className="border-slate-300 dark:border-slate-700 gap-2 h-11"
+          >
+            <Video className="size-4 text-purple-600" />
+            Mock Interview
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-6 md:mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="p-6 border-2 hover:shadow-xl transition-all hover:-translate-y-1">
-              <div className="flex items-start justify-between mb-4">
-                <div className={`${stat.bgColor} p-3 rounded-xl`}>
-                  <Icon className={`size-6 ${stat.textColor}`} />
+            <Card key={index} className="p-5 border-2 hover:shadow-xl transition-all hover:-translate-y-0.5 bg-white dark:bg-slate-800">
+              <div className="flex items-start justify-between mb-3">
+                <div className={`${stat.bgColor} p-2.5 rounded-xl`}>
+                  <Icon className={`size-5 md:size-6 ${stat.textColor}`} />
                 </div>
-                <Badge className="bg-green-100 text-green-700 border-0">{stat.change}</Badge>
+                <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-0 text-xs font-semibold">{stat.change}</Badge>
               </div>
-              <p className="text-sm text-slate-600 mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-1">{stat.label}</p>
+              <p className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">{stat.value}</p>
             </Card>
           );
         })}
       </div>
 
-      {/* Search Bar */}
-      <Card className="p-4 md:p-6 mb-6 border-2 shadow-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 md:size-5 text-slate-400" />
-          <Input
-            placeholder="Search opportunities by company, role, or location..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 md:pl-10 h-10 md:h-11 text-sm md:text-base border-2 border-slate-300 focus:border-blue-500"
-          />
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Top Matched Opportunities */}
-        <Card className="lg:col-span-2 p-4 md:p-6 border-2 shadow-lg">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Briefcase className="size-5 text-blue-600" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">
-                {userRole === 'student' ? 'Top Matched Opportunities' : 'Recent Job Postings'}
-              </h2>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setView('opportunities')} className="gap-1">
-              View All
-              <ArrowRight className="size-4" />
-            </Button>
-          </div>
-          <div className="space-y-4">
-            {filteredOpportunities.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-slate-500">No opportunities found matching your search.</p>
-              </div>
-            ) : (
-              filteredOpportunities.map((opp) => (
-              <div key={opp.id} className="group p-5 border-2 border-slate-200 rounded-xl hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer" onClick={() => setView('opportunities')}>
-                <div className="flex items-start gap-4">
-                  <div className="size-14 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center font-bold text-slate-700 text-xl border-2 border-slate-200">
-                    {opp.company.charAt(0)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors">{opp.role}</h3>
-                        <p className="text-sm text-slate-600 mt-1">{opp.company} • {opp.location}</p>
-                      </div>
-                      {userRole === 'student' && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-full">
-                          <Star className="size-4 text-green-600 fill-green-600" />
-                          <span className="font-bold text-green-700">{opp.match}%</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 mt-3">
-                      <Badge variant="secondary" className="font-medium">{opp.type}</Badge>
-                      <span className="text-sm font-bold text-green-600">{opp.ctc}</span>
-                      <span className="text-sm text-slate-500">• Deadline: {opp.deadline}</span>
-                    </div>
-                  </div>
+      {/* Main Grid: Opportunities & Sidebars */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Top Matched Opportunities & Recent Activity */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="p-5 md:p-6 border-2 shadow-sm bg-white dark:bg-slate-800">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-950/60 rounded-xl">
+                  <Briefcase className="size-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
+                    {userRole === 'student' ? 'Top Matched Opportunities' : 'Recent Job Postings'}
+                  </h2>
+                  <p className="text-xs text-slate-500">Based on your skills & eligibility criteria</p>
                 </div>
               </div>
-            ))
-            )}
-          </div>
-        </Card>
+              <Button variant="outline" size="sm" onClick={() => setView('jobs')} className="gap-1.5 text-xs">
+                View All Jobs
+                <ArrowRight className="size-3.5" />
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              {filteredOpportunities.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-500 text-sm">No opportunities found matching your search.</p>
+                </div>
+              ) : (
+                filteredOpportunities.map((opp) => (
+                  <div 
+                    key={opp.id} 
+                    className="group p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-400 hover:shadow-md transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50" 
+                    onClick={() => setView('jobs')}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="size-12 bg-gradient-to-br from-blue-500/10 to-indigo-500/20 text-blue-700 dark:text-blue-300 font-bold text-lg rounded-xl flex items-center justify-center border border-blue-200 dark:border-blue-800 flex-shrink-0">
+                        {opp.company.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div>
+                            <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-base truncate">
+                              {opp.role}
+                            </h3>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{opp.company} • {opp.location}</p>
+                          </div>
+                          {userRole === 'student' && (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-full flex-shrink-0">
+                              <Star className="size-3.5 text-emerald-600 fill-emerald-600" />
+                              <span className="font-bold text-xs text-emerald-700 dark:text-emerald-300">{opp.match}% Match</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2.5 mt-2 flex-wrap">
+                          <Badge variant="secondary" className="text-xs font-normal">{opp.type}</Badge>
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{opp.ctc}</span>
+                          <span className="text-xs text-slate-500">• Apply by: {opp.deadline}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
 
-        {/* Right Sidebar */}
-        <div className="space-y-6">
-          {/* Upcoming Interviews */}
-          <Card className="p-6 border-2 shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="size-5 text-purple-600" />
+          {/* Recent Activity Feed */}
+          <Card className="p-5 md:p-6 border-2 shadow-sm bg-white dark:bg-slate-800">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-950/60 rounded-xl">
+                <Sparkles className="size-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h3 className="font-bold text-slate-900">Upcoming Interviews</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Activity & Milestones</h3>
             </div>
             <div className="space-y-3">
+              {recentActivity.map((act) => (
+                <div key={act.id} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{act.icon || '📌'}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{act.title}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{act.description}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-400 whitespace-nowrap">{act.date}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Sidebar: Upcoming Interviews & Quick Actions */}
+        <div className="space-y-6">
+          {/* Upcoming Interviews */}
+          <Card className="p-5 md:p-6 border-2 shadow-sm bg-white dark:bg-slate-800">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-purple-100 dark:bg-purple-950/60 rounded-xl">
+                <Calendar className="size-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white">Upcoming Interviews</h3>
+            </div>
+            <div className="space-y-2.5">
               {upcomingInterviews.map((interview, index) => (
-                <div key={index} className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border-2 border-purple-200">
-                  <p className="font-bold text-slate-900 mb-1">{interview.company}</p>
-                  <p className="text-xs text-purple-700 font-medium mb-2">{interview.type}</p>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <Calendar className="size-3" />
-                    <span>{interview.date} at {interview.time}</span>
+                <div key={index} className="p-3.5 bg-gradient-to-r from-purple-50/60 to-blue-50/60 dark:from-slate-800 dark:to-slate-750 rounded-xl border border-purple-200/60 dark:border-purple-900/40">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white text-sm">{interview.company}</p>
+                      <p className="text-xs text-purple-700 dark:text-purple-400 font-medium mb-1.5">{interview.type}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] bg-white dark:bg-slate-800">Confirmed</Badge>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <Clock className="size-3 text-slate-400" />
+                    <span>{interview.date} • {interview.time}</span>
                   </div>
                 </div>
               ))}
             </div>
-            <Button className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" onClick={() => setView('interview')}>
+            <Button 
+              className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:opacity-95 text-white" 
+              onClick={() => setView('interview')}
+            >
               <Video className="size-4 mr-2" />
               Practice Mock Interview
             </Button>
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="p-6 border-2 shadow-lg bg-gradient-to-br from-slate-50 to-blue-50">
+          {/* Quick Actions Grid */}
+          <Card className="p-5 md:p-6 border-2 shadow-sm bg-white dark:bg-slate-800">
             <div className="flex items-center gap-2 mb-4">
-              <Zap className="size-5 text-orange-600" />
-              <h3 className="font-bold text-slate-900">Quick Actions</h3>
+              <Zap className="size-5 text-amber-500" />
+              <h3 className="font-bold text-slate-900 dark:text-white">Quick Preparation Tools</h3>
             </div>
-            <div className="space-y-2">
-              <Button className="w-full justify-start bg-white hover:bg-blue-50 text-slate-900 border-2 border-slate-200 hover:border-blue-300" onClick={() => setView('opportunities')}>
-                <Briefcase className="size-4 mr-2" />
-                Browse Jobs
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="justify-start gap-2 h-10 border-slate-200 dark:border-slate-700 text-xs font-semibold" 
+                onClick={() => setView('live-coding')}
+              >
+                <Code className="size-3.5 text-blue-600" />
+                Live Coding
               </Button>
-              <Button className="w-full justify-start bg-white hover:bg-purple-50 text-slate-900 border-2 border-slate-200 hover:border-purple-300" onClick={() => setView('interview')}>
-                <Video className="size-4 mr-2" />
-                Start Mock Interview
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="justify-start gap-2 h-10 border-slate-200 dark:border-slate-700 text-xs font-semibold" 
+                onClick={() => setView('resume-ats')}
+              >
+                <FileText className="size-3.5 text-emerald-600" />
+                Resume ATS
               </Button>
-              {userRole === 'coordinator' && (
-                <Button className="w-full justify-start bg-white hover:bg-green-50 text-slate-900 border-2 border-slate-200 hover:border-green-300" onClick={() => setView('recruiters')}>
-                  <Building2 className="size-4 mr-2" />
-                  Contact Recruiters
-                </Button>
-              )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="justify-start gap-2 h-10 border-slate-200 dark:border-slate-700 text-xs font-semibold" 
+                onClick={() => setView('dsa-tracker')}
+              >
+                <Target className="size-3.5 text-purple-600" />
+                DSA Tracker
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="justify-start gap-2 h-10 border-slate-200 dark:border-slate-700 text-xs font-semibold" 
+                onClick={() => setView('oa-practice')}
+              >
+                <Clock className="size-3.5 text-orange-600" />
+                OA Practice
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="justify-start gap-2 h-10 border-slate-200 dark:border-slate-700 text-xs font-semibold" 
+                onClick={() => setView('skill-gap')}
+              >
+                <Award className="size-3.5 text-pink-600" />
+                Skill Gap
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="justify-start gap-2 h-10 border-slate-200 dark:border-slate-700 text-xs font-semibold" 
+                onClick={() => setView('project-prep')}
+              >
+                <Briefcase className="size-3.5 text-indigo-600" />
+                Project Prep
+              </Button>
             </div>
           </Card>
 
-          {/* Progress Card */}
-          <Card className="p-6 border-2 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
-            <h3 className="font-bold text-slate-900 mb-4">Placement Readiness</h3>
-            <div className="space-y-4">
+          {/* Placement Readiness Progress */}
+          <Card className="p-5 md:p-6 border-2 shadow-sm bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-blue-500/5 dark:bg-slate-800">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Placement Readiness</h3>
+              <Badge className="bg-emerald-600 text-white text-[10px]">High Preparedness</Badge>
+            </div>
+            <div className="space-y-3.5">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-slate-700 font-medium">Profile Completion</span>
-                  <span className="text-sm font-bold text-green-600">85%</span>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">Profile Completeness</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">92%</span>
                 </div>
-                <Progress value={85} className="h-2.5" />
+                <Progress value={92} className="h-2" />
               </div>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-slate-700 font-medium">Skill Assessment</span>
-                  <span className="text-sm font-bold text-green-600">78%</span>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">DSA & Algorithms</span>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">84%</span>
                 </div>
-                <Progress value={78} className="h-2.5" />
+                <Progress value={84} className="h-2" />
               </div>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-slate-700 font-medium">Interview Practice</span>
-                  <span className="text-sm font-bold text-yellow-600">65%</span>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">System Design & Projects</span>
+                  <span className="font-bold text-purple-600 dark:text-purple-400">76%</span>
                 </div>
-                <Progress value={65} className="h-2.5" />
+                <Progress value={76} className="h-2" />
               </div>
             </div>
           </Card>

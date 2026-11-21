@@ -251,6 +251,7 @@ export class App {
     // OA Practice routes
     const oaPracticeController = new OaPracticeController();
     apiV1Router.use('/oa-practice', oaPracticeController.router);
+    apiV1Router.use('/oa-tests', oaPracticeController.router);
 
     // Blogs routes
     const blogsController = new BlogsController();

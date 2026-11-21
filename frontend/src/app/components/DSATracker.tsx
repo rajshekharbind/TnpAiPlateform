@@ -28,17 +28,46 @@ interface DSATracker {
   timeSpent: number; // in hours
 }
 
-export default function DSATracker() {
+interface DSATrackerProps {
+  setView?: (view: any) => void;
+}
+
+export default function DSATracker({ setView }: DSATrackerProps = {}) {
   const [problems, setProblems] = useState<DSAProblem[]>([
     { id: '1', title: 'Two Sum', category: 'Arrays', difficulty: 'easy', solvedCount: 1, attempts: 1, bestTime: 15, status: 'solved', topics: ['HashMap', 'Arrays'] },
     { id: '2', title: 'Reverse Linked List', category: 'Linked List', difficulty: 'easy', solvedCount: 1, attempts: 2, bestTime: 20, status: 'solved', topics: ['Recursion', 'Iteration'] },
     { id: '3', title: 'Merge K Sorted Lists', category: 'Linked List', difficulty: 'hard', solvedCount: 0, attempts: 2, bestTime: 45, status: 'attempted', topics: ['Heap', 'Divide & Conquer'] },
     { id: '4', title: 'LRU Cache', category: 'Design', difficulty: 'hard', solvedCount: 0, attempts: 0, bestTime: 0, status: 'not-started', topics: ['Hash Map', 'DoublyLinkedList'] },
-    { id: '5', title: 'Longest Substring', category: 'Strings', difficulty: 'medium', solvedCount: 1, attempts: 3, bestTime: 30, status: 'solved', topics: ['Sliding Window'] },
+    { id: '5', title: 'Longest Substring Without Repeating Characters', category: 'Strings', difficulty: 'medium', solvedCount: 1, attempts: 3, bestTime: 30, status: 'solved', topics: ['Sliding Window'] },
+    { id: '6', title: 'Valid Parentheses', category: 'Stack', difficulty: 'easy', solvedCount: 1, attempts: 1, bestTime: 10, status: 'solved', topics: ['Stack', 'Strings'] },
+    { id: '7', title: 'Maximum Subarray (Kadane)', category: 'Arrays', difficulty: 'medium', solvedCount: 1, attempts: 2, bestTime: 22, status: 'solved', topics: ['Dynamic Programming', 'Arrays'] },
+    { id: '8', title: 'Course Schedule (Cycle Detection)', category: 'Graphs', difficulty: 'medium', solvedCount: 0, attempts: 1, bestTime: 0, status: 'attempted', topics: ['Topological Sort', 'BFS/DFS'] },
   ]);
 
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterDifficulty, setFilterDifficulty] = useState('all');
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newCat, setNewCat] = useState('Arrays');
+  const [newDiff, setNewDiff] = useState<'easy' | 'medium' | 'hard'>('medium');
+
+  const handleAddProblem = () => {
+    if (!newTitle.trim()) return;
+    const newP: DSAProblem = {
+      id: `dsa-${Date.now()}`,
+      title: newTitle,
+      category: newCat,
+      difficulty: newDiff,
+      solvedCount: 0,
+      attempts: 0,
+      bestTime: 0,
+      status: 'not-started',
+      topics: [newCat]
+    };
+    setProblems([newP, ...problems]);
+    setIsAddOpen(false);
+    setNewTitle('');
+  };
 
   const trackerStats: DSATracker[] = [
     { category: 'Arrays', total: 12, solved: 8, accuracy: 85, timeSpent: 4.5 },
@@ -146,35 +175,109 @@ export default function DSATracker() {
 
           {/* Problems Tab */}
           <TabsContent value="problems">
-            {/* Filters */}
-            <div className="flex gap-3 mb-6 flex-wrap">
-              <div>
-                <label htmlFor="category-filter" className="text-sm text-slate-600 dark:text-slate-400 mr-2">Category:</label>
-                <select
-                  id="category-filter"
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  className="px-3 py-1 border rounded-md dark:bg-slate-800 dark:border-slate-600"
-                >
-                  <option value="all">All</option>
-                  {[...new Set(problems.map(p => p.category))].map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+            {/* Filters & Add Problem */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+              <div className="flex gap-3 flex-wrap items-center">
+                <div>
+                  <label htmlFor="category-filter" className="text-sm text-slate-600 dark:text-slate-400 mr-2">Category:</label>
+                  <select
+                    id="category-filter"
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="px-3 py-1.5 border rounded-md dark:bg-slate-800 dark:border-slate-600 text-sm"
+                  >
+                    <option value="all">All</option>
+                    {[...new Set(problems.map(p => p.category))].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="difficulty-filter" className="text-sm text-slate-600 dark:text-slate-400 mr-2">Difficulty:</label>
+                  <select
+                    id="difficulty-filter"
+                    value={filterDifficulty}
+                    onChange={(e) => setFilterDifficulty(e.target.value)}
+                    className="px-3 py-1.5 border rounded-md dark:bg-slate-800 dark:border-slate-600 text-sm"
+                  >
+                    <option value="all">All</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label htmlFor="difficulty-filter" className="text-sm text-slate-600 dark:text-slate-400 mr-2">Difficulty:</label>
-                <select
-                  id="difficulty-filter"
-                  value={filterDifficulty}
-                  onChange={(e) => setFilterDifficulty(e.target.value)}
-                  className="px-3 py-1 border rounded-md dark:bg-slate-800 dark:border-slate-600"
-                >
-                  <option value="all">All</option>
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
+
+              <div className="flex items-center gap-2">
+                {setView && (
+                  <Button 
+                    size="sm"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white gap-1.5 h-9"
+                    onClick={() => setView('live-coding')}
+                  >
+                    <Code className="size-4" />
+                    Open Live Code Editor
+                  </Button>
+                )}
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1.5 h-9">
+                      + Log Problem
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Log Solved or Target Problem</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 my-2">
+                      <div>
+                        <label className="text-xs font-semibold">Problem Title</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border rounded-md text-sm mt-1 dark:bg-slate-800 dark:border-slate-700"
+                          placeholder="e.g. Trapping Rain Water"
+                          value={newTitle}
+                          onChange={e => setNewTitle(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold">Category</label>
+                          <select
+                            className="w-full px-3 py-2 border rounded-md text-sm mt-1 dark:bg-slate-800 dark:border-slate-700"
+                            value={newCat}
+                            onChange={e => setNewCat(e.target.value)}
+                          >
+                            <option value="Arrays">Arrays</option>
+                            <option value="Strings">Strings</option>
+                            <option value="Linked List">Linked List</option>
+                            <option value="Trees">Trees</option>
+                            <option value="Graphs">Graphs</option>
+                            <option value="Dynamic Programming">Dynamic Programming</option>
+                            <option value="Stack">Stack</option>
+                            <option value="Design">Design</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold">Difficulty</label>
+                          <select
+                            className="w-full px-3 py-2 border rounded-md text-sm mt-1 dark:bg-slate-800 dark:border-slate-700"
+                            value={newDiff}
+                            onChange={e => setNewDiff(e.target.value as any)}
+                          >
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+                      <Button onClick={handleAddProblem} className="bg-blue-600 text-white">Save Problem</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
@@ -201,10 +304,21 @@ export default function DSATracker() {
                         </div>
                       </div>
 
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="outline">Update</Button>
-                        </DialogTrigger>
+                      <div className="flex items-center gap-2">
+                        {setView && (
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 text-white gap-1 text-xs"
+                            onClick={() => setView('live-coding')}
+                          >
+                            <Code className="size-3.5" />
+                            Solve
+                          </Button>
+                        )}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline">Update</Button>
+                          </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>{problem.title}</DialogTitle>
@@ -244,6 +358,7 @@ export default function DSATracker() {
                         </DialogContent>
                       </Dialog>
                     </div>
+                  </div>
                   </CardContent>
                 </Card>
               ))}

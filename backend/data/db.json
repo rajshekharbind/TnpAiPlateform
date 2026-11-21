@@ -160,5 +160,40 @@
         }
       ]
     }
+  ],
+  "announcements": [
+    {
+      "id": 1,
+      "type": "opportunity",
+      "title": "Google is hiring for SDE roles!",
+      "description": "Google is actively recruiting for Software Development Engineer positions across multiple locations.",
+      "date": "2026-11-21T17:26:19.940Z",
+      "priority": "high",
+      "icon": "🔍",
+      "read": false,
+      "actionUrl": "/jobs?company=Google"
+    },
+    {
+      "id": 2,
+      "type": "feature",
+      "title": "New Mock Interview Feature Released",
+      "description": "Practice live coding interviews with AI feedback and peer connections now available.",
+      "date": "2026-11-20T17:26:19.940Z",
+      "priority": "medium",
+      "icon": "✨",
+      "read": false,
+      "actionUrl": "/mock-interview"
+    },
+    {
+      "id": 3,
+      "type": "event",
+      "title": "System Design Workshop Tomorrow at 6 PM",
+      "description": "Join our expert panel discussing real-world system design challenges.",
+      "date": "2026-11-19T17:26:19.940Z",
+      "priority": "high",
+      "icon": "📅",
+      "read": true,
+      "actionUrl": "/events"
+    }
   ]
 }

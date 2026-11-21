@@ -18,7 +18,11 @@ interface Alert {
   actionUrl?: string;
 }
 
-export default function EligibilityAlerts() {
+interface EligibilityAlertsProps {
+  setView?: (view: any) => void;
+}
+
+export default function EligibilityAlerts({ setView }: EligibilityAlertsProps = {}) {
   const [alerts, setAlerts] = useState<Alert[]>([
     {
       id: '1',
@@ -196,8 +200,23 @@ export default function EligibilityAlerts() {
 
                   <div className="flex gap-2">
                     {alert.actionable && (
-                      <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                        Action
+                      <Button 
+                        size="sm" 
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white"
+                        onClick={() => {
+                          handleMarkAsRead(alert.id);
+                          if (setView) {
+                            if (alert.type === 'offer' || alert.type === 'new-job' || alert.type === 'eligibility') {
+                              setView('jobs');
+                            } else if (alert.type === 'deadline') {
+                              setView('jobs');
+                            } else {
+                              setView('jobs');
+                            }
+                          }
+                        }}
+                      >
+                        Take Action
                       </Button>
                     )}
                     {!alert.read && (
@@ -205,7 +224,7 @@ export default function EligibilityAlerts() {
                         Mark Read
                       </Button>
                     )}
-                    <Button size="sm" variant="outline" onClick={() => handleDelete(alert.id)} className="text-red-600">
+                    <Button size="sm" variant="outline" onClick={() => handleDelete(alert.id)} className="text-red-600 hover:text-red-700">
                       Delete
                     </Button>
                   </div>

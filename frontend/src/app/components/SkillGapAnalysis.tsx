@@ -74,9 +74,60 @@ export default function SkillGapAnalysis({ userRole }: SkillGapAnalysisProps) {
       estimatedDays: 14,
       status: 'not-started',
     },
+    {
+      id: '5',
+      name: 'SQL & Database Indexing',
+      category: 'Database',
+      currentLevel: 50,
+      targetLevel: 85,
+      gapScore: 35,
+      priority: 'high',
+      resources: ['Use The Index, Luke!', 'PostgreSQL Docs', 'LeetCode SQL 50'],
+      estimatedDays: 18,
+      status: 'in-progress',
+    },
+    {
+      id: '6',
+      name: 'Docker & Containerization',
+      category: 'DevOps',
+      currentLevel: 40,
+      targetLevel: 80,
+      gapScore: 40,
+      priority: 'high',
+      resources: ['Docker Mastery Course', 'Compose Tutorials', 'Kubernetes Basics'],
+      estimatedDays: 21,
+      status: 'not-started',
+    },
   ]);
 
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
+  const [newSkillName, setNewSkillName] = useState('');
+  const [newSkillCat, setNewSkillCat] = useState('Backend');
+  const [newCurrentLvl, setNewCurrentLvl] = useState(40);
+  const [newTargetLvl, setNewTargetLvl] = useState(80);
+  const [newDays, setNewDays] = useState(25);
+
+  const handleAddCustomSkill = () => {
+    if (!newSkillName.trim()) return;
+    const gap = Math.max(0, newTargetLvl - newCurrentLvl);
+    const priority: Skill['priority'] = gap >= 40 ? 'critical' : gap >= 25 ? 'high' : gap >= 15 ? 'medium' : 'low';
+    const newS: Skill = {
+      id: `skill-${Date.now()}`,
+      name: newSkillName,
+      category: newSkillCat,
+      currentLevel: newCurrentLvl,
+      targetLevel: newTargetLvl,
+      gapScore: gap,
+      priority,
+      resources: ['Official Documentation', 'YouTube Masterclass', 'Practice Exercises'],
+      estimatedDays: newDays,
+      status: 'not-started'
+    };
+    setSkills([newS, ...skills]);
+    setIsAddSkillOpen(false);
+    setNewSkillName('');
+  };
 
   const criticalGaps = skills.filter(s => s.priority === 'critical');
   const totalGap = skills.reduce((sum, s) => sum + s.gapScore, 0) / skills.length;
@@ -105,9 +156,9 @@ export default function SkillGapAnalysis({ userRole }: SkillGapAnalysisProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-md text-white">
               <Target className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -115,6 +166,85 @@ export default function SkillGapAnalysis({ userRole }: SkillGapAnalysisProps) {
               <p className="text-slate-600 dark:text-slate-400">Identify & close skill gaps for better placement</p>
             </div>
           </div>
+
+          <Dialog open={isAddSkillOpen} onOpenChange={setIsAddSkillOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-md">
+                + Add Target Skill
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add New Target Skill</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 my-2">
+                <div>
+                  <label className="text-xs font-semibold">Skill Name *</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border rounded-md text-sm mt-1 dark:bg-slate-800 dark:border-slate-700"
+                    placeholder="e.g. GraphQL, AWS, Next.js"
+                    value={newSkillName}
+                    onChange={e => setNewSkillName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">Category</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md text-sm mt-1 dark:bg-slate-800 dark:border-slate-700"
+                    value={newSkillCat}
+                    onChange={e => setNewSkillCat(e.target.value)}
+                  >
+                    <option value="Frontend">Frontend</option>
+                    <option value="Backend">Backend</option>
+                    <option value="Database">Database</option>
+                    <option value="Core DSA">Core DSA</option>
+                    <option value="DevOps">DevOps</option>
+                    <option value="Languages">Languages</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold">Current Level ({newCurrentLvl}%)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      className="w-full mt-2"
+                      value={newCurrentLvl}
+                      onChange={e => setNewCurrentLvl(Number(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold">Target Level ({newTargetLvl}%)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      className="w-full mt-2"
+                      value={newTargetLvl}
+                      onChange={e => setNewTargetLvl(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">Estimated Days: {newDays} days</label>
+                  <input
+                    type="range"
+                    min="5"
+                    max="90"
+                    className="w-full mt-2"
+                    value={newDays}
+                    onChange={e => setNewDays(Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setIsAddSkillOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddCustomSkill} className="bg-emerald-600 text-white">Save Skill</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Overview Cards */}

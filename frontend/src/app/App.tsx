@@ -1,6 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useClerk } from '@clerk/clerk-react';
-import { Building2, Briefcase, Video, LayoutDashboard, Users, LogOut, Settings, User, Bell, Search, BookOpen, Megaphone, Moon, Sun } from 'lucide-react';
+import { 
+  Building2, 
+  Briefcase, 
+  Video, 
+  LayoutDashboard, 
+  Users, 
+  LogOut, 
+  Settings, 
+  User, 
+  Bell, 
+  Search, 
+  BookOpen, 
+  Megaphone, 
+  Moon, 
+  Sun,
+  Code,
+  Target,
+  Clock,
+  Layers,
+  FileText,
+  CheckSquare
+} from 'lucide-react';
 import Dashboard from '@/app/components/Dashboard';
 import OpportunityDiscovery from '@/app/components/OpportunityDiscovery';
 import RecruiterOutreach from '@/app/components/RecruiterOutreach';
@@ -69,19 +90,37 @@ export default function App() {
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
 
-  const navigation = [
+  const studentNavigation = [
     { id: 'dashboard' as View, name: 'Dashboard', icon: LayoutDashboard },
-    { id: 'jobs' as View, name: 'Jobs', icon: Briefcase },
+    { id: 'jobs' as View, name: 'Jobs & Drives', icon: Briefcase },
     { id: 'companies' as View, name: 'Companies', icon: Building2 },
+    { id: 'live-coding' as View, name: 'Live Coding (LeetCode)', icon: Code },
     { id: 'interview' as View, name: 'Mock Interview', icon: Video },
-    { id: 'live-coding' as View, name: 'Live Coding', icon: Video },
-    { id: 'resume-ats' as View, name: 'Resume ATS', icon: BookOpen },
-    { id: 'dsa-tracker' as View, name: 'DSA Tracker', icon: Briefcase },
-    { id: 'oa-practice' as View, name: 'OA Practice', icon: Video },
-    { id: 'blogs' as View, name: 'Blogs', icon: BookOpen },
+    { id: 'resume-ats' as View, name: 'Resume ATS', icon: FileText },
+    { id: 'dsa-tracker' as View, name: 'DSA Tracker', icon: Target },
+    { id: 'oa-practice' as View, name: 'OA Practice', icon: Clock },
+    { id: 'skill-gap' as View, name: 'Skill Gap', icon: CheckSquare },
+    { id: 'project-prep' as View, name: 'Project Prep', icon: Layers },
+    { id: 'alerts' as View, name: 'Eligibility Alerts', icon: Bell },
+    { id: 'blogs' as View, name: 'Blogs & Prep', icon: BookOpen },
     { id: 'announcements' as View, name: 'Announcements', icon: Megaphone },
     { id: 'analytics' as View, name: 'Analytics', icon: Users },
   ];
+
+  const coordinatorNavigation = [
+    { id: 'dashboard' as View, name: 'Dashboard', icon: LayoutDashboard },
+    { id: 'jobs' as View, name: 'Jobs Directory', icon: Briefcase },
+    { id: 'companies' as View, name: 'Companies', icon: Building2 },
+    { id: 'recruiters' as View, name: 'Recruiter Outreach', icon: Users },
+    { id: 'jaf' as View, name: 'Job Announcements (JAF)', icon: FileText },
+    { id: 'role-creation' as View, name: 'Role Creation', icon: Briefcase },
+    { id: 'live-coding' as View, name: 'Live Coding', icon: Code },
+    { id: 'interview' as View, name: 'Mock Interviews', icon: Video },
+    { id: 'announcements' as View, name: 'Announcements', icon: Megaphone },
+    { id: 'analytics' as View, name: 'Placement Analytics', icon: Users },
+  ];
+
+  const navigation = user?.role === 'coordinator' ? coordinatorNavigation : studentNavigation;
 
   // Get dynamic search placeholder based on current view
   const getSearchPlaceholder = () => {
@@ -153,13 +192,13 @@ export default function App() {
       case 'resume-ats':
         return <ResumeAtsAnalysis userRole={user.role} />;
       case 'dsa-tracker':
-        return <DSATracker />;
+        return <DSATracker setView={handleViewChange} />;
       case 'oa-practice':
         return <OAPracticeModule />;
       case 'skill-gap':
         return <SkillGapAnalysis userRole={user.role} />;
       case 'alerts':
-        return <EligibilityAlerts />;
+        return <EligibilityAlerts setView={handleViewChange} />;
       case 'project-prep':
         return <ProjectInterviewPrep />;
       // New Recruiter Modules
