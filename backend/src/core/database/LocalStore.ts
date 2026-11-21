@@ -11,7 +11,16 @@ export class LocalStore {
   private static initialized = false;
 
   private static getFilePath(): string {
-    return path.join(process.cwd(), 'data', 'db.json');
+    // Look for backend/data/db.json first
+    const backendDataPath = path.resolve(__dirname, '../../../data/db.json');
+    if (fs.existsSync(backendDataPath)) {
+      return backendDataPath;
+    }
+    const cwdDataPath = path.resolve(process.cwd(), 'backend', 'data', 'db.json');
+    if (fs.existsSync(path.dirname(cwdDataPath))) {
+      return cwdDataPath;
+    }
+    return backendDataPath;
   }
 
   private static ensureInit(): void {

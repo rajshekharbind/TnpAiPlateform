@@ -44,8 +44,7 @@ import BlacklistController from '@modules/blacklist/controllers/BlacklistControl
 import OneOfferPolicyController from '@modules/one-offer-policy/controllers/OneOfferPolicyController';
 import ResumeBooksController from '@modules/resume-books/controllers/ResumeBooksController';
 import ImageController from '@modules/images/controllers/ImageController';
-
-//import { problemsRouter, roomsRouter, submissionsRouter, scorecardsRouter } from '@api/routes/live-coding.routes';
+import { problemsRouter, roomsRouter, submissionsRouter, scorecardsRouter } from '@api/routes/live-coding.routes';
 
 /**
  * Application Setup
@@ -293,17 +292,12 @@ export class App {
     const imageController = new ImageController();
     apiV1Router.use('/images', imageController.router);
 
-    // Live Coding routes (if available)
-    try {
-      const { problemsRouter, roomsRouter, submissionsRouter, scorecardsRouter } = require('./api/routes/live-coding.routes');
-      apiV1Router.use('/problems', problemsRouter);
-      apiV1Router.use('/rooms', roomsRouter);
-      apiV1Router.use('/submissions', submissionsRouter);
-      apiV1Router.use('/scorecards', scorecardsRouter);
-      logger.info('✅ Live Coding routes registered successfully');
-    } catch (err) {
-      logger.warn('⚠️ Live Coding routes error:', err);
-    }
+    // Live Coding routes (LeetCode platform)
+    apiV1Router.use('/problems', problemsRouter);
+    apiV1Router.use('/rooms', roomsRouter);
+    apiV1Router.use('/submissions', submissionsRouter);
+    apiV1Router.use('/scorecards', scorecardsRouter);
+    logger.info('✅ Live Coding routes registered successfully');
 
     // TODO: Add other module routes here
     // apiV1Router.use('/users', usersController.router);
