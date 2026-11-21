@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 interface StudentReadiness {
   id: string;
@@ -23,10 +24,11 @@ interface StudentReadiness {
 
 /**
  * Student Readiness Monitoring Controller
+ * Monitors student placement preparation readiness with persistent storage
  */
 export class StudentReadinessController {
   public router: Router;
-  private students: StudentReadiness[] = [
+  private static defaultStudents: StudentReadiness[] = [
     {
       id: '1',
       name: 'Rahul Verma',
@@ -140,7 +142,7 @@ export class StudentReadinessController {
 
   private async listStudents(req: Request, res: Response): Promise<void> {
     const { readiness, branch } = req.query;
-    let filtered = this.students;
+    let filtered = LocalStore.get<StudentReadiness>('studentsReadiness', StudentReadinessController.defaultStudents);
 
     if (readiness) {
       filtered = filtered.filter(s => s.placementReadiness === readiness);
@@ -157,7 +159,8 @@ export class StudentReadinessController {
   }
 
   private async getStudentById(req: Request, res: Response): Promise<void> {
-    const student = this.students.find(s => s.id === req.params.id);
+    const students = LocalStore.get<StudentReadiness>('studentsReadiness', StudentReadinessController.defaultStudents);
+    const student = students.find(s => s.id === req.params.id);
     if (!student) {
       res.status(404).json({ success: false, message: 'Student not found' });
       return;
@@ -166,47 +169,48 @@ export class StudentReadinessController {
   }
 
   private async updateStudent(req: Request, res: Response): Promise<void> {
-    const student = this.students.find(s => s.id === req.params.id);
-    if (!student) {
+    const updated = LocalStore.update<StudentReadiness>('studentsReadiness', 'id', req.params.id, req.body);
+    if (!updated) {
       res.status(404).json({ success: false, message: 'Student not found' });
       return;
     }
-    Object.assign(student, req.body);
-    res.json({ success: true, data: student });
+    res.json({ success: true, data: updated });
   }
 
   private async deleteStudent(req: Request, res: Response): Promise<void> {
-    const index = this.students.findIndex(s => s.id === req.params.id);
-    if (index === -1) {
+    const deleted = LocalStore.delete('studentsReadiness', 'id', req.params.id);
+    if (!deleted) {
       res.status(404).json({ success: false, message: 'Student not found' });
       return;
     }
-    const deleted = this.students.splice(index, 1)[0];
-    res.json({ success: true, data: deleted });
+    res.json({ success: true, data: { id: req.params.id } });
   }
 
   private async getByReadinessLevel(req: Request, res: Response): Promise<void> {
     const { level } = req.params;
-    const filtered = this.students.filter(s => s.placementReadiness === level);
+    const students = LocalStore.get<StudentReadiness>('studentsReadiness', StudentReadinessController.defaultStudents);
+    const filtered = students.filter(s => s.placementReadiness === level);
     res.json({ success: true, data: filtered, total: filtered.length });
   }
 
   private async getAnalyticsSummary(_req: Request, res: Response): Promise<void> {
-    const high = this.students.filter(s => s.placementReadiness === 'high').length;
-    const medium = this.students.filter(s => s.placementReadiness === 'medium').length;
-    const low = this.students.filter(s => s.placementReadiness === 'low').length;
+    const students = LocalStore.get<StudentReadiness>('studentsReadiness', StudentReadinessController.defaultStudents);
+    const high = students.filter(s => s.placementReadiness === 'high').length;
+    const medium = students.filter(s => s.placementReadiness === 'medium').length;
+    const low = students.filter(s => s.placementReadiness === 'low').length;
+    const total = students.length || 1;
 
     res.json({
       success: true,
       data: {
-        totalStudents: this.students.length,
+        totalStudents: students.length,
         highReadiness: high,
         mediumReadiness: medium,
         lowReadiness: low,
-        averageCGPA: (this.students.reduce((sum, s) => sum + s.cgpa, 0) / this.students.length).toFixed(2),
-        averageResumeScore: (this.students.reduce((sum, s) => sum + s.resumeScore, 0) / this.students.length).toFixed(2),
-        totalMockInterviews: this.students.reduce((sum, s) => sum + s.mockInterviewsAttended, 0),
-        averageMockScore: (this.students.reduce((sum, s) => sum + s.averageMockScore, 0) / this.students.length).toFixed(2),
+        averageCGPA: (students.reduce((sum, s) => sum + s.cgpa, 0) / total).toFixed(2),
+        averageResumeScore: (students.reduce((sum, s) => sum + s.resumeScore, 0) / total).toFixed(2),
+        totalMockInterviews: students.reduce((sum, s) => sum + s.mockInterviewsAttended, 0),
+        averageMockScore: (students.reduce((sum, s) => sum + s.averageMockScore, 0) / total).toFixed(2),
       },
     });
   }

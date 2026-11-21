@@ -137,6 +137,70 @@ async function verifyAllSections() {
     if (res.status !== 200) throw new Error(`Status ${res.status}`);
   });
 
+  // 14. Placement Policies (Database-backed)
+  await checkEndpoint('GET /api/v1/placement-policies', async () => {
+    const res = await request(expressApp).get('/api/v1/placement-policies');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
+  // 15. Blacklist Management (Database-backed)
+  await checkEndpoint('GET /api/v1/blacklist', async () => {
+    const res = await request(expressApp).get('/api/v1/blacklist');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
+  // 16. One Offer Policy (Database-backed)
+  await checkEndpoint('GET /api/v1/one-offer-policy', async () => {
+    const res = await request(expressApp).get('/api/v1/one-offer-policy');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
+  // 17. Drives Management (Database-backed)
+  await checkEndpoint('GET /api/v1/drives', async () => {
+    const res = await request(expressApp).get('/api/v1/drives');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
+  // 18. Offer Management (Database-backed)
+  await checkEndpoint('GET /api/v1/offers', async () => {
+    const res = await request(expressApp).get('/api/v1/offers');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
+  // 19. Mock Interviews (Database-backed)
+  await checkEndpoint('GET /api/v1/mock-interview', async () => {
+    const res = await request(expressApp).get('/api/v1/mock-interview');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
+  // 20. Resume Books (Database-backed)
+  await checkEndpoint('GET /api/v1/resume-books', async () => {
+    const res = await request(expressApp).get('/api/v1/resume-books');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
+  // 21. Student Readiness (Database-backed)
+  await checkEndpoint('GET /api/v1/student-readiness', async () => {
+    const res = await request(expressApp).get('/api/v1/student-readiness');
+    if (res.status !== 200 || !res.body.success || !Array.isArray(res.body.data)) {
+      throw new Error(`Status ${res.status}`);
+    }
+  });
+
   console.log(`\n=============================================`);
   console.log(`📊 Audit Result: ${passed}/${total} Endpoints Verified Successfully!`);
   console.log(`=============================================\n`);

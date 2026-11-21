@@ -1,14 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 /**
  * Offer Management Controller
- * Handles offer letter creation, tracking, and management
+ * Handles offer letter creation, tracking, and management with disk persistence
  */
 export class OfferManagementController {
   public router: Router;
 
-  private static offers: any[] = [
+  private static defaultOffers: any[] = [
     {
       id: '1',
       studentName: 'Rahul Kumar',
@@ -132,7 +133,7 @@ export class OfferManagementController {
   private async listOffers(req: Request, res: Response): Promise<void> {
     const { status, company, student } = req.query;
 
-    let offers = OfferManagementController.offers;
+    let offers = LocalStore.get('offers', OfferManagementController.defaultOffers);
 
     if (status) {
       offers = offers.filter(o => o.status === status);
@@ -162,7 +163,8 @@ export class OfferManagementController {
   private async getOfferDetail(req: Request, res: Response): Promise<void> {
     const { offerId } = req.params;
 
-    const offer = OfferManagementController.offers.find(o => o.id === offerId);
+    const offers = LocalStore.get('offers', OfferManagementController.defaultOffers);
+    const offer = offers.find(o => o.id === offerId);
 
     if (!offer) {
       res.status(404).json({
@@ -223,7 +225,7 @@ export class OfferManagementController {
       createdAt: new Date().toISOString().split('T')[0],
     };
 
-    OfferManagementController.offers.push(newOffer);
+    LocalStore.insert('offers', newOffer);
 
     res.status(201).json({
       success: true,
@@ -238,7 +240,8 @@ export class OfferManagementController {
     const { offerId } = req.params;
     const updateData = req.body;
 
-    const offer = OfferManagementController.offers.find(o => o.id === offerId);
+    const offers = LocalStore.get('offers', OfferManagementController.defaultOffers);
+    const offer = offers.find(o => o.id === offerId);
 
     if (!offer) {
       res.status(404).json({
@@ -256,8 +259,7 @@ export class OfferManagementController {
       createdAt: offer.createdAt,
     };
 
-    const index = OfferManagementController.offers.findIndex(o => o.id === offerId);
-    OfferManagementController.offers[index] = updated;
+    LocalStore.update('offers', 'id', offerId, updated);
 
     res.json({
       success: true,
@@ -271,9 +273,10 @@ export class OfferManagementController {
   private async deleteOffer(req: Request, res: Response): Promise<void> {
     const { offerId } = req.params;
 
-    const index = OfferManagementController.offers.findIndex(o => o.id === offerId);
+    const offers = LocalStore.get('offers', OfferManagementController.defaultOffers);
+    const offer = offers.find(o => o.id === offerId);
 
-    if (index === -1) {
+    if (!offer) {
       res.status(404).json({
         success: false,
         error: 'Offer not found',
@@ -281,12 +284,12 @@ export class OfferManagementController {
       return;
     }
 
-    const deleted = OfferManagementController.offers.splice(index, 1)[0];
+    LocalStore.delete('offers', 'id', offerId);
 
     res.json({
       success: true,
       message: 'Offer deleted successfully',
-      data: deleted,
+      data: offer,
     });
   }
 
@@ -305,7 +308,8 @@ export class OfferManagementController {
       return;
     }
 
-    const offer = OfferManagementController.offers.find(o => o.id === offerId);
+    const offers = LocalStore.get('offers', OfferManagementController.defaultOffers);
+    const offer = offers.find(o => o.id === offerId);
 
     if (!offer) {
       res.status(404).json({
@@ -315,12 +319,12 @@ export class OfferManagementController {
       return;
     }
 
-    offer.status = status;
+    const updated = LocalStore.update('offers', 'id', offerId, { status });
 
     res.json({
       success: true,
       message: 'Offer status updated successfully',
-      data: offer,
+      data: updated,
     });
   }
 
@@ -330,7 +334,7 @@ export class OfferManagementController {
   private async getOffersByStatus(req: Request, res: Response): Promise<void> {
     const { status } = req.params;
 
-    const offers = OfferManagementController.offers.filter(o => o.status === status);
+    const offers = LocalStore.get('offers', OfferManagementController.defaultOffers).filter(o => o.status === status);
 
     res.json({
       success: true,
@@ -346,7 +350,7 @@ export class OfferManagementController {
   private async getOffersByCompany(req: Request, res: Response): Promise<void> {
     const { companyName } = req.params;
 
-    const offers = OfferManagementController.offers.filter(o =>
+    const offers = LocalStore.get('offers', OfferManagementController.defaultOffers).filter(o =>
       o.companyName.toLowerCase().includes(companyName.toLowerCase())
     );
 
@@ -362,7 +366,7 @@ export class OfferManagementController {
    * Get offers summary with analytics
    */
   private async getOffersSummary(_req: Request, res: Response): Promise<void> {
-    const offers = OfferManagementController.offers;
+    const offers = LocalStore.get('offers', OfferManagementController.defaultOffers);
 
     const summary = {
       totalOffers: offers.length,

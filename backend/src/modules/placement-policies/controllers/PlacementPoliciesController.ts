@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 interface PolicyRule {
   id: string;
@@ -23,11 +24,11 @@ interface PolicyRule {
 
 /**
  * Placement Policies Controller
- * Manages placement rules & regulations for TnP process
+ * Manages placement rules & regulations for TnP process with persistent storage
  */
 export class PlacementPoliciesController {
   public router: Router;
-  private policies: PolicyRule[] = [
+  private static defaultPolicies: PolicyRule[] = [
     {
       id: '1',
       name: 'One Offer Policy 2026',
@@ -163,7 +164,7 @@ export class PlacementPoliciesController {
   private async getPolicies(req: Request, res: Response): Promise<void> {
     const { enabled, type, search } = req.query;
 
-    let filtered = [...this.policies];
+    let filtered = [...LocalStore.get('placementPolicies', PlacementPoliciesController.defaultPolicies)];
 
     if (enabled !== undefined) {
       filtered = filtered.filter(p => p.enabled === (enabled === 'true'));
@@ -217,7 +218,7 @@ export class PlacementPoliciesController {
       createdBy: 'Admin',
     };
 
-    this.policies.push(newPolicy);
+    LocalStore.insert('placementPolicies', newPolicy);
 
     res.status(201).json({
       success: true,
@@ -228,7 +229,8 @@ export class PlacementPoliciesController {
 
   private async getPolicyById(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
-    const policy = this.policies.find(p => p.id === policyId);
+    const policies = LocalStore.get<PolicyRule>('placementPolicies', PlacementPoliciesController.defaultPolicies);
+    const policy = policies.find(p => p.id === policyId);
 
     if (!policy) {
       res.status(404).json({
@@ -246,18 +248,15 @@ export class PlacementPoliciesController {
 
   private async updatePolicy(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
-    const policyIdx = this.policies.findIndex(p => p.id === policyId);
+    const updated = LocalStore.update<PolicyRule>('placementPolicies', 'id', policyId, req.body);
 
-    if (policyIdx === -1) {
+    if (!updated) {
       res.status(404).json({
         success: false,
         error: 'Policy not found',
       });
       return;
     }
-
-    const updated = { ...this.policies[policyIdx], ...req.body, id: policyId };
-    this.policies[policyIdx] = updated;
 
     res.json({
       success: true,
@@ -268,10 +267,9 @@ export class PlacementPoliciesController {
 
   private async deletePolicy(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
-    const initialLength = this.policies.length;
-    this.policies = this.policies.filter(p => p.id !== policyId);
+    const deleted = LocalStore.delete('placementPolicies', 'id', policyId);
 
-    if (this.policies.length === initialLength) {
+    if (!deleted) {
       res.status(404).json({
         success: false,
         error: 'Policy not found',
@@ -288,9 +286,9 @@ export class PlacementPoliciesController {
   private async togglePolicy(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
     const { enabled } = req.body;
-    const policy = this.policies.find(p => p.id === policyId);
+    const updated = LocalStore.update<PolicyRule>('placementPolicies', 'id', policyId, { enabled });
 
-    if (!policy) {
+    if (!updated) {
       res.status(404).json({
         success: false,
         error: 'Policy not found',
@@ -298,18 +296,17 @@ export class PlacementPoliciesController {
       return;
     }
 
-    policy.enabled = enabled;
-
     res.json({
       success: true,
-      data: policy,
+      data: updated,
       message: 'Policy status updated successfully',
     });
   }
 
   private async getPoliciesByType(req: Request, res: Response): Promise<void> {
     const { type } = req.params;
-    const filtered = this.policies.filter(p => p.type === type);
+    const policies = LocalStore.get<PolicyRule>('placementPolicies', PlacementPoliciesController.defaultPolicies);
+    const filtered = policies.filter(p => p.type === type);
 
     res.json({
       success: true,
@@ -321,7 +318,8 @@ export class PlacementPoliciesController {
 
   private async getPoliciesByScope(req: Request, res: Response): Promise<void> {
     const { scope } = req.params;
-    const filtered = this.policies.filter(p => p.appliedTo === scope || p.appliedTo === 'all');
+    const policies = LocalStore.get<PolicyRule>('placementPolicies', PlacementPoliciesController.defaultPolicies);
+    const filtered = policies.filter(p => p.appliedTo === scope || p.appliedTo === 'all');
 
     res.json({
       success: true,

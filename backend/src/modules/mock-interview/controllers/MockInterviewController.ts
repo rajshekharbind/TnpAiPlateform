@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 interface MockInterview {
   id: string;
@@ -23,11 +24,11 @@ interface MockInterview {
 
 /**
  * Mock Interviews Controller
- * Handles mock interview records and analytics
+ * Handles mock interview records and analytics with persistent storage
  */
 export class MockInterviewController {
   public router: Router;
-  private interviews: MockInterview[] = [
+  private static defaultInterviews: MockInterview[] = [
     {
       id: '1',
       studentName: 'Rahul Verma',
@@ -157,7 +158,7 @@ export class MockInterviewController {
 
   private async listInterviews(req: Request, res: Response): Promise<void> {
     const { type, recommendation, student } = req.query;
-    let filtered = this.interviews;
+    let filtered = LocalStore.get<MockInterview>('mockInterviews', MockInterviewController.defaultInterviews);
 
     if (type) {
       filtered = filtered.filter(i => i.interviewType === type);
@@ -183,12 +184,13 @@ export class MockInterviewController {
       id: `${Date.now()}`,
       ...req.body,
     };
-    this.interviews.push(newInterview);
+    LocalStore.insert('mockInterviews', newInterview);
     res.status(201).json({ success: true, data: newInterview });
   }
 
   private async getInterviewById(req: Request, res: Response): Promise<void> {
-    const interview = this.interviews.find(i => i.id === req.params.id);
+    const interviews = LocalStore.get<MockInterview>('mockInterviews', MockInterviewController.defaultInterviews);
+    const interview = interviews.find(i => i.id === req.params.id);
     if (!interview) {
       res.status(404).json({ success: false, message: 'Interview not found' });
       return;
@@ -197,53 +199,55 @@ export class MockInterviewController {
   }
 
   private async updateInterview(req: Request, res: Response): Promise<void> {
-    const interview = this.interviews.find(i => i.id === req.params.id);
-    if (!interview) {
+    const updated = LocalStore.update<MockInterview>('mockInterviews', 'id', req.params.id, req.body);
+    if (!updated) {
       res.status(404).json({ success: false, message: 'Interview not found' });
       return;
     }
-    Object.assign(interview, req.body);
-    res.json({ success: true, data: interview });
+    res.json({ success: true, data: updated });
   }
 
   private async deleteInterview(req: Request, res: Response): Promise<void> {
-    const index = this.interviews.findIndex(i => i.id === req.params.id);
-    if (index === -1) {
+    const deleted = LocalStore.delete('mockInterviews', 'id', req.params.id);
+    if (!deleted) {
       res.status(404).json({ success: false, message: 'Interview not found' });
       return;
     }
-    const deleted = this.interviews.splice(index, 1)[0];
-    res.json({ success: true, data: deleted });
+    res.json({ success: true, data: { id: req.params.id } });
   }
 
   private async getByStudentRoll(req: Request, res: Response): Promise<void> {
     const { studentRoll } = req.params;
-    const filtered = this.interviews.filter(i => i.studentRoll === studentRoll);
+    const interviews = LocalStore.get<MockInterview>('mockInterviews', MockInterviewController.defaultInterviews);
+    const filtered = interviews.filter(i => i.studentRoll === studentRoll);
     res.json({ success: true, data: filtered, total: filtered.length });
   }
 
   private async getAnalyticsSummary(_req: Request, res: Response): Promise<void> {
-    const excellent = this.interviews.filter(i => i.recommendation === 'excellent').length;
-    const good = this.interviews.filter(i => i.recommendation === 'good').length;
-    const average = this.interviews.filter(i => i.recommendation === 'average').length;
-    const needsImprovement = this.interviews.filter(i => i.recommendation === 'needs-improvement').length;
+    const interviews = LocalStore.get<MockInterview>('mockInterviews', MockInterviewController.defaultInterviews);
+    const excellent = interviews.filter(i => i.recommendation === 'excellent').length;
+    const good = interviews.filter(i => i.recommendation === 'good').length;
+    const average = interviews.filter(i => i.recommendation === 'average').length;
+    const needsImprovement = interviews.filter(i => i.recommendation === 'needs-improvement').length;
+
+    const count = interviews.length || 1;
 
     res.json({
       success: true,
       data: {
-        totalInterviews: this.interviews.length,
+        totalInterviews: interviews.length,
         excellentCount: excellent,
         goodCount: good,
         averageCount: average,
         needsImprovementCount: needsImprovement,
-        averageScore: (this.interviews.reduce((sum, i) => sum + i.overallScore, 0) / this.interviews.length).toFixed(2),
-        avgTechnicalScore: (this.interviews.reduce((sum, i) => sum + i.technicalScore, 0) / this.interviews.length).toFixed(2),
-        avgCommunicationScore: (this.interviews.reduce((sum, i) => sum + i.communicationScore, 0) / this.interviews.length).toFixed(2),
+        averageScore: (interviews.reduce((sum, i) => sum + (i.overallScore || 0), 0) / count).toFixed(2),
+        avgTechnicalScore: (interviews.reduce((sum, i) => sum + (i.technicalScore || 0), 0) / count).toFixed(2),
+        avgCommunicationScore: (interviews.reduce((sum, i) => sum + (i.communicationScore || 0), 0) / count).toFixed(2),
         typeBreakdown: {
-          technical: this.interviews.filter(i => i.interviewType === 'technical').length,
-          hr: this.interviews.filter(i => i.interviewType === 'hr').length,
-          caseStudy: this.interviews.filter(i => i.interviewType === 'case-study').length,
-          behavioral: this.interviews.filter(i => i.interviewType === 'behavioral').length,
+          technical: interviews.filter(i => i.interviewType === 'technical').length,
+          hr: interviews.filter(i => i.interviewType === 'hr').length,
+          caseStudy: interviews.filter(i => i.interviewType === 'case-study').length,
+          behavioral: interviews.filter(i => i.interviewType === 'behavioral').length,
         },
       },
     });

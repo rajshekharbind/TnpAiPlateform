@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 interface ResumeBatch {
   id: string;
@@ -24,10 +25,11 @@ interface ResumeBatch {
 
 /**
  * Resume Books Controller
+ * Manages resume collections with disk persistence
  */
 export class ResumeBooksController {
   public router: Router;
-  private resumeBooks: ResumeBatch[] = [
+  private static defaultResumeBooks: ResumeBatch[] = [
     {
       id: '1',
       name: '2026 CSE Branch Resume Book',
@@ -129,7 +131,7 @@ export class ResumeBooksController {
 
   private async getBooks(req: Request, res: Response): Promise<void> {
     const { status, branch, year } = req.query;
-    let filtered = this.resumeBooks;
+    let filtered = LocalStore.get<ResumeBatch>('resumeBooks', ResumeBooksController.defaultResumeBooks);
 
     if (status) filtered = filtered.filter(b => b.status === status);
     if (branch) filtered = filtered.filter(b => b.branch === branch);
@@ -153,7 +155,8 @@ export class ResumeBooksController {
   }
 
   private async getBookById(req: Request, res: Response): Promise<void> {
-    const book = this.resumeBooks.find(b => b.id === req.params.id);
+    const books = LocalStore.get<ResumeBatch>('resumeBooks', ResumeBooksController.defaultResumeBooks);
+    const book = books.find(b => b.id === req.params.id);
     if (!book) {
       res.status(404).json({ success: false, message: 'Resume book not found' });
       return;
@@ -191,7 +194,7 @@ export class ResumeBooksController {
       resumes: [],
     };
 
-    this.resumeBooks.push(newBook);
+    LocalStore.insert('resumeBooks', newBook);
     res.status(201).json({
       success: true,
       data: newBook,
@@ -199,47 +202,52 @@ export class ResumeBooksController {
   }
 
   private async updateBook(req: Request, res: Response): Promise<void> {
-    const book = this.resumeBooks.find(b => b.id === req.params.id);
-    if (!book) {
+    const updated = LocalStore.update<ResumeBatch>('resumeBooks', 'id', req.params.id, {
+      ...req.body,
+      updatedDate: new Date().toISOString(),
+    });
+
+    if (!updated) {
       res.status(404).json({ success: false, message: 'Resume book not found' });
       return;
     }
 
-    Object.assign(book, { ...req.body, updatedDate: new Date().toISOString() });
-    res.json({ success: true, data: book });
+    res.json({ success: true, data: updated });
   }
 
   private async deleteBook(req: Request, res: Response): Promise<void> {
-    const index = this.resumeBooks.findIndex(b => b.id === req.params.id);
-    if (index === -1) {
+    const deleted = LocalStore.delete('resumeBooks', 'id', req.params.id);
+    if (!deleted) {
       res.status(404).json({ success: false, message: 'Resume book not found' });
       return;
     }
 
-    const deleted = this.resumeBooks.splice(index, 1)[0];
-    res.json({ success: true, data: deleted, message: 'Resume book deleted' });
+    res.json({ success: true, data: { id: req.params.id }, message: 'Resume book deleted' });
   }
 
   private async updateStatus(req: Request, res: Response): Promise<void> {
-    const book = this.resumeBooks.find(b => b.id === req.params.id);
-    if (!book) {
-      res.status(404).json({ success: false, message: 'Resume book not found' });
-      return;
-    }
-
     const { status } = req.body;
     if (!['active', 'archived'].includes(status)) {
       res.status(400).json({ success: false, message: 'Invalid status' });
       return;
     }
 
-    book.status = status;
-    book.updatedDate = new Date().toISOString();
-    res.json({ success: true, data: book });
+    const updated = LocalStore.update<ResumeBatch>('resumeBooks', 'id', req.params.id, {
+      status,
+      updatedDate: new Date().toISOString(),
+    });
+
+    if (!updated) {
+      res.status(404).json({ success: false, message: 'Resume book not found' });
+      return;
+    }
+
+    res.json({ success: true, data: updated });
   }
 
   private async exportBook(req: Request, res: Response): Promise<void> {
-    const book = this.resumeBooks.find(b => b.id === req.params.id);
+    const books = LocalStore.get<ResumeBatch>('resumeBooks', ResumeBooksController.defaultResumeBooks);
+    const book = books.find(b => b.id === req.params.id);
     if (!book) {
       res.status(404).json({ success: false, message: 'Resume book not found' });
       return;
@@ -260,7 +268,8 @@ export class ResumeBooksController {
 
   private async getBooksByStatus(req: Request, res: Response): Promise<void> {
     const { status } = req.params;
-    const filtered = this.resumeBooks.filter(b => b.status === status);
+    const books = LocalStore.get<ResumeBatch>('resumeBooks', ResumeBooksController.defaultResumeBooks);
+    const filtered = books.filter(b => b.status === status);
 
     res.json({
       success: true,

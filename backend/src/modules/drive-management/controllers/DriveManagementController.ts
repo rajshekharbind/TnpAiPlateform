@@ -1,14 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 /**
  * Drive Management Controller
- * Handles campus recruitment drive scheduling and management
+ * Handles campus recruitment drive scheduling and management with disk persistence
  */
 export class DriveManagementController {
   public router: Router;
   
-  private static drives: any[] = [
+  private static defaultDrives: any[] = [
     {
       id: '1',
       companyName: 'Google',
@@ -190,7 +191,7 @@ export class DriveManagementController {
   private async listDrives(req: Request, res: Response): Promise<void> {
     const { status, company } = req.query;
 
-    let drives = DriveManagementController.drives;
+    let drives = LocalStore.get('drives', DriveManagementController.defaultDrives);
 
     if (status) {
       drives = drives.filter(d => d.status === status);
@@ -215,7 +216,8 @@ export class DriveManagementController {
   private async getDriveDetail(req: Request, res: Response): Promise<void> {
     const { driveId } = req.params;
 
-    const drive = DriveManagementController.drives.find(d => d.id === driveId);
+    const drives = LocalStore.get('drives', DriveManagementController.defaultDrives);
+    const drive = drives.find(d => d.id === driveId);
 
     if (!drive) {
       res.status(404).json({
@@ -277,7 +279,7 @@ export class DriveManagementController {
       createdBy: 'Admin',
     };
 
-    DriveManagementController.drives.push(newDrive);
+    LocalStore.insert('drives', newDrive);
 
     res.status(201).json({
       success: true,
@@ -292,7 +294,8 @@ export class DriveManagementController {
     const { driveId } = req.params;
     const updateData = req.body;
 
-    const drive = DriveManagementController.drives.find(d => d.id === driveId);
+    const drives = LocalStore.get('drives', DriveManagementController.defaultDrives);
+    const drive = drives.find(d => d.id === driveId);
 
     if (!drive) {
       res.status(404).json({
@@ -308,12 +311,11 @@ export class DriveManagementController {
       id: drive.id,
       postedDate: drive.postedDate,
       createdBy: drive.createdBy,
-      registeredStudents: updateData.registeredStudents || drive.registeredStudents,
-      attendees: updateData.attendees || drive.attendees,
+      registeredStudents: updateData.registeredStudents !== undefined ? updateData.registeredStudents : drive.registeredStudents,
+      attendees: updateData.attendees !== undefined ? updateData.attendees : drive.attendees,
     };
 
-    const index = DriveManagementController.drives.findIndex(d => d.id === driveId);
-    DriveManagementController.drives[index] = updated;
+    LocalStore.update('drives', 'id', driveId, updated);
 
     res.json({
       success: true,
@@ -327,9 +329,10 @@ export class DriveManagementController {
   private async deleteDrive(req: Request, res: Response): Promise<void> {
     const { driveId } = req.params;
 
-    const index = DriveManagementController.drives.findIndex(d => d.id === driveId);
+    const drives = LocalStore.get('drives', DriveManagementController.defaultDrives);
+    const drive = drives.find(d => d.id === driveId);
 
-    if (index === -1) {
+    if (!drive) {
       res.status(404).json({
         success: false,
         error: 'Drive not found',
@@ -337,12 +340,12 @@ export class DriveManagementController {
       return;
     }
 
-    const deleted = DriveManagementController.drives.splice(index, 1)[0];
+    LocalStore.delete('drives', 'id', driveId);
 
     res.json({
       success: true,
       message: 'Drive deleted successfully',
-      data: deleted,
+      data: drive,
     });
   }
 
@@ -352,7 +355,7 @@ export class DriveManagementController {
   private async getDrivesByStatus(req: Request, res: Response): Promise<void> {
     const { status } = req.params;
 
-    const drives = DriveManagementController.drives.filter(d => d.status === status);
+    const drives = LocalStore.get('drives', DriveManagementController.defaultDrives).filter(d => d.status === status);
 
     res.json({
       success: true,
@@ -368,7 +371,7 @@ export class DriveManagementController {
   private async getDrivesByCompany(req: Request, res: Response): Promise<void> {
     const { companyName } = req.params;
 
-    const drives = DriveManagementController.drives.filter(d =>
+    const drives = LocalStore.get('drives', DriveManagementController.defaultDrives).filter(d =>
       d.companyName.toLowerCase().includes(companyName.toLowerCase())
     );
 
@@ -395,7 +398,8 @@ export class DriveManagementController {
       return;
     }
 
-    const drive = DriveManagementController.drives.find(d => d.id === driveId);
+    const drives = LocalStore.get('drives', DriveManagementController.defaultDrives);
+    const drive = drives.find(d => d.id === driveId);
 
     if (!drive) {
       res.status(404).json({
@@ -405,13 +409,13 @@ export class DriveManagementController {
       return;
     }
 
-    // Increment registration count (simplified - in real app would store actual registrations)
-    drive.registeredStudents = (drive.registeredStudents || 0) + 1;
+    const newCount = (drive.registeredStudents || 0) + 1;
+    const updated = LocalStore.update('drives', 'id', driveId, { registeredStudents: newCount });
 
     res.json({
       success: true,
       message: `Student ${studentName} registered for ${drive.companyName} drive`,
-      data: drive,
+      data: updated,
     });
   }
 
@@ -430,7 +434,8 @@ export class DriveManagementController {
       return;
     }
 
-    const drive = DriveManagementController.drives.find(d => d.id === driveId);
+    const drives = LocalStore.get('drives', DriveManagementController.defaultDrives);
+    const drive = drives.find(d => d.id === driveId);
 
     if (!drive) {
       res.status(404).json({
@@ -440,15 +445,13 @@ export class DriveManagementController {
       return;
     }
 
-    // Update attendance (simplified)
-    if (present) {
-      drive.attendees = (drive.attendees || 0) + 1;
-    }
+    const newAttendees = present ? (drive.attendees || 0) + 1 : drive.attendees;
+    const updated = LocalStore.update('drives', 'id', driveId, { attendees: newAttendees });
 
     res.json({
       success: true,
       message: 'Attendance marked successfully',
-      data: drive,
+      data: updated,
     });
   }
 }

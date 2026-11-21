@@ -195,5 +195,1012 @@
       "read": true,
       "actionUrl": "/events"
     }
+  ],
+  "placementPolicies": [
+    {
+      "id": "1",
+      "name": "One Offer Policy 2026",
+      "type": "one-offer",
+      "enabled": true,
+      "description": "Students can accept only one offer per academic year. Once a student accepts an offer, they cannot accept another offer during the same placement cycle.",
+      "conditions": [
+        "Student has accepted an offer",
+        "Another offer received",
+        "Same academic year"
+      ],
+      "action": "Block second offer acceptance and notify recruiter",
+      "priority": 1,
+      "appliedTo": "all",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "createdDate": "2026-03-15",
+      "createdBy": "Admin",
+      "impact": {
+        "applicableStudents": 420,
+        "affectedPolicies": [
+          "one-offer-exception",
+          "higher-package-override"
+        ]
+      }
+    },
+    {
+      "id": "2",
+      "name": "CSE Branch Premium Package",
+      "type": "bonus-points",
+      "enabled": true,
+      "description": "CSE students get 5% bonus scoring points for packages >= 15 LPA to encourage high-value placements. This incentivizes top companies to recruit from CSE branch.",
+      "conditions": [
+        "Branch = CSE",
+        "Package >= 15 LPA",
+        "CGPA >= 8.0"
+      ],
+      "action": "Add 5% bonus to interview score and ranking priority",
+      "priority": 2,
+      "appliedTo": "CSE",
+      "startDate": "2026-04-01",
+      "endDate": "2026-12-31",
+      "createdDate": "2026-04-01",
+      "createdBy": "Admin",
+      "impact": {
+        "applicableStudents": 145,
+        "affectedPolicies": [
+          "branch-performance",
+          "scoring-matrix"
+        ]
+      }
+    },
+    {
+      "id": "3",
+      "name": "Minimum CGPA Requirement",
+      "type": "cgpa-rule",
+      "enabled": true,
+      "description": "Students must maintain a minimum CGPA of 7.0 to be eligible for campus placements. This ensures quality candidates for recruiters and maintains placement statistics.",
+      "conditions": [
+        "CGPA >= 7.0",
+        "No active backlog",
+        "Attendance >= 75%"
+      ],
+      "action": "Allow placement registration and interview participation",
+      "priority": 1,
+      "appliedTo": "all",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "createdDate": "2026-02-01",
+      "createdBy": "Admin",
+      "impact": {
+        "applicableStudents": 380,
+        "affectedPolicies": [
+          "eligibility-check",
+          "tier-classification"
+        ]
+      }
+    },
+    {
+      "id": "4",
+      "name": "Backlog Student Restriction",
+      "type": "blacklist",
+      "enabled": true,
+      "description": "Students with active backlogs are restricted from participating in campus placements until they clear all failed courses. This maintains academic standards.",
+      "conditions": [
+        "Active backlog present",
+        "Not yet cleared"
+      ],
+      "action": "Block from placement registration and mark as ineligible",
+      "priority": 1,
+      "appliedTo": "all",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "createdDate": "2026-01-15",
+      "createdBy": "Admin",
+      "impact": {
+        "applicableStudents": 45,
+        "affectedPolicies": [
+          "eligibility-check"
+        ]
+      }
+    },
+    {
+      "id": "5",
+      "name": "Tier-2 Company CGPA Flexibility",
+      "type": "branch-rule",
+      "enabled": true,
+      "description": "For Tier-2 and emerging companies, CGPA requirement is relaxed to 6.5 to provide more placement opportunities for average-performing students.",
+      "conditions": [
+        "Company category = Tier-2",
+        "CGPA >= 6.5",
+        "Interview cleared"
+      ],
+      "action": "Allow interview participation with relaxed CGPA criteria",
+      "priority": 3,
+      "appliedTo": "all",
+      "startDate": "2026-06-01",
+      "endDate": "2026-12-31",
+      "createdDate": "2026-05-20",
+      "createdBy": "Coordinator",
+      "impact": {
+        "applicableStudents": 120,
+        "affectedPolicies": [
+          "eligibility-check",
+          "tier-classification"
+        ]
+      }
+    },
+    {
+      "id": "6",
+      "name": "Higher Package Override",
+      "type": "custom",
+      "enabled": false,
+      "description": "Students who receive an offer with 50% higher package than their initial offer can accept the second offer (exception to one-offer policy).",
+      "conditions": [
+        "Higher package >= 150% of first offer",
+        "Within 30 days",
+        "Mutual agreement"
+      ],
+      "action": "Allow second offer acceptance with policy override",
+      "priority": 2,
+      "appliedTo": "all",
+      "startDate": "2026-07-01",
+      "endDate": "2026-12-31",
+      "createdDate": "2026-06-10",
+      "createdBy": "Admin",
+      "impact": {
+        "applicableStudents": 25,
+        "affectedPolicies": [
+          "one-offer-policy"
+        ]
+      }
+    }
+  ],
+  "blacklist": [
+    {
+      "id": "1",
+      "studentId": "STU00145",
+      "studentName": "Rajesh Kumar Singh",
+      "email": "rajesh.singh@college.edu",
+      "companyName": "Google",
+      "reason": "Accepted offer & didn't report on joining date",
+      "details": "Student accepted the offer but failed to report on the stipulated joining date without prior communication. This caused significant operational disruption as the company had planned resources accordingly.",
+      "severity": "critical",
+      "dateBlacklisted": "2026-02-10",
+      "expiryDate": "2028-02-10",
+      "blacklistedBy": "Admin",
+      "status": "active"
+    },
+    {
+      "id": "2",
+      "studentId": "STU00287",
+      "studentName": "Priya Sharma",
+      "email": "priya.sharma@college.edu",
+      "companyName": "Microsoft",
+      "reason": "Declined offer after verbal commitment",
+      "details": "Student verbally committed to the offer during the final round interview, but declined in writing 24 hours before the official offer letter. This violated the placement agreement and caused significant recruiting delays.",
+      "severity": "high",
+      "dateBlacklisted": "2026-01-15",
+      "expiryDate": "2027-01-15",
+      "blacklistedBy": "Coordinator",
+      "status": "active"
+    },
+    {
+      "id": "3",
+      "studentId": "STU00156",
+      "studentName": "Amit Patel",
+      "email": "amit.patel@college.edu",
+      "companyName": "Amazon",
+      "reason": "No-show for final round interview",
+      "details": "Student didn't appear for the scheduled final round interview despite confirming his availability. This wasted company time and delayed hiring process for that position.",
+      "severity": "high",
+      "dateBlacklisted": "2026-03-05",
+      "expiryDate": "2027-03-05",
+      "blacklistedBy": "Admin",
+      "status": "active"
+    },
+    {
+      "id": "4",
+      "studentId": "STU00203",
+      "studentName": "Deepak Verma",
+      "email": "deepak.verma@college.edu",
+      "companyName": "TCS",
+      "reason": "Misbehavior during interview process",
+      "details": "Student demonstrated unprofessional conduct during the interview process, including disrespectful behavior towards recruiters and violation of code of conduct during company visit.",
+      "severity": "medium",
+      "dateBlacklisted": "2026-02-25",
+      "expiryDate": "2026-08-25",
+      "blacklistedBy": "Admin",
+      "status": "active"
+    },
+    {
+      "id": "5",
+      "studentId": "STU00312",
+      "studentName": "Sneha Gupta",
+      "email": "sneha.gupta@college.edu",
+      "companyName": "Flipkart",
+      "reason": "Plagiarism in assessment test",
+      "details": "Student was caught using unauthorized resources during online assessment, violating academic integrity and placement process ethics. This undermines fair evaluation for all candidates.",
+      "severity": "critical",
+      "dateBlacklisted": "2026-01-20",
+      "expiryDate": "2027-01-20",
+      "blacklistedBy": "Admin",
+      "status": "active"
+    },
+    {
+      "id": "6",
+      "studentId": "STU00089",
+      "studentName": "Vikas Reddy",
+      "email": "vikas.reddy@college.edu",
+      "companyName": "Adobe",
+      "reason": "Absconded after verbal commitment",
+      "details": "Student made verbal commitment to the offer but went completely unreachable, causing significant coordination issues and delay in recruiting alternative candidates.",
+      "severity": "high",
+      "dateBlacklisted": "2025-12-10",
+      "expiryDate": "2026-12-10",
+      "blacklistedBy": "Coordinator",
+      "status": "expired"
+    },
+    {
+      "id": "7",
+      "studentId": "STU00198",
+      "studentName": "Neha Singh",
+      "email": "neha.singh@college.edu",
+      "companyName": "Goldman Sachs",
+      "reason": "Submitted false documents",
+      "details": "Student submitted forged academic certificates and employment verification documents during the application process, which is a serious violation of institutional and legal standards.",
+      "severity": "critical",
+      "dateBlacklisted": "2026-02-01",
+      "expiryDate": "2029-02-01",
+      "blacklistedBy": "Admin",
+      "status": "active"
+    },
+    {
+      "id": "8",
+      "studentId": "STU00267",
+      "studentName": "Rohan Kapoor",
+      "email": "rohan.kapoor@college.edu",
+      "companyName": "Deloitte",
+      "reason": "Breach of confidentiality",
+      "details": "Student disclosed confidential information about interview questions and company hiring strategy to other candidates, violating confidentiality agreements.",
+      "severity": "medium",
+      "dateBlacklisted": "2026-03-20",
+      "expiryDate": "2026-09-20",
+      "blacklistedBy": "Admin",
+      "status": "active"
+    }
+  ],
+  "oneOfferPolicies": [
+    {
+      "id": "1",
+      "studentId": "STU00145",
+      "studentName": "Rahul Kumar",
+      "email": "rahul.kumar@college.edu",
+      "branch": "CSE",
+      "batch": "2026",
+      "currentOffer": {
+        "companyName": "Google",
+        "position": "Senior Software Engineer",
+        "salary": 1000000,
+        "ctc": 1200000,
+        "acceptedDate": "2026-02-15",
+        "joiningDate": "2026-07-01"
+      },
+      "blockedOffers": [
+        {
+          "companyName": "Microsoft",
+          "position": "Senior Software Engineer",
+          "salary": 1050000,
+          "ctc": 1250000,
+          "offeredDate": "2026-02-18",
+          "blockReason": "Student already accepted offer from Google on 2026-02-15. One-Offer Policy enforced."
+        },
+        {
+          "companyName": "Amazon",
+          "position": "SDE-2",
+          "salary": 980000,
+          "ctc": 1180000,
+          "offeredDate": "2026-02-20",
+          "blockReason": "Offer blocked as per One-Offer Policy. Student already committed to Google."
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "2",
+      "studentId": "STU00287",
+      "studentName": "Priya Sharma",
+      "email": "priya.sharma@college.edu",
+      "branch": "IT",
+      "batch": "2026",
+      "currentOffer": {
+        "companyName": "Microsoft",
+        "position": "Software Engineer",
+        "salary": 900000,
+        "ctc": 1080000,
+        "acceptedDate": "2026-03-01",
+        "joiningDate": "2026-07-15"
+      },
+      "blockedOffers": [
+        {
+          "companyName": "Adobe",
+          "position": "Software Engineer",
+          "salary": 920000,
+          "ctc": 1100000,
+          "offeredDate": "2026-03-05",
+          "blockReason": "Blocked under One-Offer Policy. Student accepted Microsoft offer."
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "3",
+      "studentId": "STU00156",
+      "studentName": "Amit Patel",
+      "email": "amit.patel@college.edu",
+      "branch": "ECE",
+      "batch": "2026",
+      "currentOffer": {
+        "companyName": "TCS",
+        "position": "Systems Engineer",
+        "salary": 600000,
+        "ctc": 720000,
+        "acceptedDate": "2026-01-20",
+        "joiningDate": "2026-06-01"
+      },
+      "blockedOffers": [
+        {
+          "companyName": "Infosys",
+          "position": "Systems Engineer",
+          "salary": 610000,
+          "ctc": 732000,
+          "offeredDate": "2026-01-25",
+          "blockReason": "One-Offer Policy prevents acceptance. Student committed to TCS."
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "4",
+      "studentId": "STU00203",
+      "studentName": "Deepak Verma",
+      "email": "deepak.verma@college.edu",
+      "branch": "CSE",
+      "batch": "2026",
+      "currentOffer": {
+        "companyName": "Goldman Sachs",
+        "position": "Analyst",
+        "salary": 1400000,
+        "ctc": 1680000,
+        "acceptedDate": "2026-02-10",
+        "joiningDate": "2026-08-01"
+      },
+      "blockedOffers": [
+        {
+          "companyName": "Morgan Stanley",
+          "position": "Senior Analyst",
+          "salary": 1500000,
+          "ctc": 1800000,
+          "offeredDate": "2026-02-12",
+          "blockReason": "Blocked by One-Offer Policy. Student has Goldman Sachs offer."
+        }
+      ],
+      "status": "appeal-pending",
+      "appealDetails": {
+        "reason": "Requesting exception for significantly higher package (25% increase) and better career growth at Morgan Stanley.",
+        "submittedDate": "2026-02-13",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "5",
+      "studentId": "STU00312",
+      "studentName": "Sneha Gupta",
+      "email": "sneha.gupta@college.edu",
+      "branch": "CSE",
+      "batch": "2026",
+      "currentOffer": {
+        "companyName": "Google",
+        "position": "Software Engineer",
+        "salary": 950000,
+        "ctc": 1140000,
+        "acceptedDate": "2026-02-20",
+        "joiningDate": "2026-07-01"
+      },
+      "blockedOffers": [
+        {
+          "companyName": "Meta",
+          "position": "Software Engineer",
+          "salary": 1200000,
+          "ctc": 1440000,
+          "offeredDate": "2026-02-22",
+          "blockReason": "Meta offer rejected under One-Offer Policy. Student accepted Google offer."
+        }
+      ],
+      "status": "exception-approved",
+      "impact": {
+        "studentBenefit": "Exception approved for Meta offer (26.3% higher CTC than Google offer). Student provided with opportunity to accept better career option with mutual consent from Google.",
+        "reasonForException": "50%+ package increase with clear career advancement opportunity."
+      }
+    }
+  ],
+  "drives": [
+    {
+      "id": "1",
+      "companyName": "Google",
+      "driveDate": "2026-05-15",
+      "location": "College Campus, Auditorium A",
+      "jobTitle": "Software Engineer Intern",
+      "totalPositions": 20,
+      "registeredStudents": 156,
+      "attendees": 142,
+      "status": "upcoming",
+      "description": "On-campus recruitment drive for internship positions",
+      "hostContact": "John Doe",
+      "hostPhone": "+91-9876543210",
+      "roundDetails": [
+        {
+          "roundNumber": 1,
+          "roundName": "Online Assessment",
+          "date": "2026-05-15",
+          "time": "10:00 AM",
+          "location": "Online",
+          "capacity": 156
+        },
+        {
+          "roundNumber": 2,
+          "roundName": "Technical Interview",
+          "date": "2026-05-16",
+          "time": "02:00 PM",
+          "location": "College Campus",
+          "capacity": 40
+        }
+      ],
+      "eligibility": {
+        "cgpa": 7,
+        "branches": [
+          "CSE",
+          "IT",
+          "ECE"
+        ],
+        "batch": "2024-2025"
+      },
+      "postedDate": "2026-04-01",
+      "createdBy": "Admin"
+    },
+    {
+      "id": "2",
+      "companyName": "Microsoft",
+      "driveDate": "2026-05-20",
+      "location": "Virtual - Online",
+      "jobTitle": "Senior Software Engineer",
+      "totalPositions": 15,
+      "registeredStudents": 124,
+      "attendees": 98,
+      "status": "upcoming",
+      "description": "Microsoft is hiring talented engineers for their cloud division",
+      "hostContact": "Sarah Smith",
+      "hostPhone": "+91-9876543211",
+      "roundDetails": [
+        {
+          "roundNumber": 1,
+          "roundName": "Code Round",
+          "date": "2026-05-20",
+          "time": "09:00 AM",
+          "location": "Online",
+          "capacity": 124
+        },
+        {
+          "roundNumber": 2,
+          "roundName": "System Design",
+          "date": "2026-05-21",
+          "time": "03:00 PM",
+          "location": "Online",
+          "capacity": 30
+        }
+      ],
+      "eligibility": {
+        "cgpa": 6.5,
+        "branches": [
+          "CSE",
+          "IT"
+        ],
+        "batch": "2024-2025"
+      },
+      "postedDate": "2026-04-02",
+      "createdBy": "Admin"
+    },
+    {
+      "id": "3",
+      "companyName": "Amazon",
+      "driveDate": "2026-05-25",
+      "location": "College Campus, Auditorium B",
+      "jobTitle": "Data Engineer",
+      "totalPositions": 18,
+      "registeredStudents": 87,
+      "attendees": 65,
+      "status": "ongoing",
+      "description": "Amazon is recruiting data engineers for AWS platform",
+      "hostContact": "Mike Johnson",
+      "hostPhone": "+91-9876543212",
+      "roundDetails": [
+        {
+          "roundNumber": 1,
+          "roundName": "Technical Assessment",
+          "date": "2026-05-25",
+          "time": "11:00 AM",
+          "location": "College Campus",
+          "capacity": 87
+        }
+      ],
+      "eligibility": {
+        "cgpa": 7.2,
+        "branches": [
+          "CSE",
+          "IT",
+          "ECE"
+        ],
+        "batch": "2024-2025"
+      },
+      "postedDate": "2026-04-03",
+      "createdBy": "Admin"
+    }
+  ],
+  "offers": [
+    {
+      "id": "1",
+      "studentName": "Rahul Kumar",
+      "studentEmail": "rahul@college.edu",
+      "companyName": "Google",
+      "position": "Software Engineer",
+      "salary": 800000,
+      "ctc": 1000000,
+      "joiningDate": "2026-07-15",
+      "offerDate": "2026-04-10",
+      "expiryDate": "2026-04-20",
+      "status": "pending",
+      "benefits": [
+        "Health Insurance",
+        "5 weeks leave",
+        "Stock Options"
+      ],
+      "terms": "Full-time, Permanent",
+      "responseDeadline": "2026-04-20",
+      "createdAt": "2026-04-10"
+    },
+    {
+      "id": "2",
+      "studentName": "Priya Singh",
+      "studentEmail": "priya@college.edu",
+      "companyName": "Microsoft",
+      "position": "SDE Intern",
+      "salary": 50000,
+      "ctc": 0,
+      "joiningDate": "2026-05-01",
+      "offerDate": "2026-03-15",
+      "expiryDate": "2026-04-15",
+      "status": "accepted",
+      "benefits": [
+        "Stipend",
+        "Accommodation",
+        "Meals"
+      ],
+      "terms": "3-month internship",
+      "responseDeadline": "2026-04-15",
+      "createdAt": "2026-03-15"
+    },
+    {
+      "id": "3",
+      "studentName": "Vikram Patel",
+      "studentEmail": "vikram@college.edu",
+      "companyName": "Amazon",
+      "position": "Data Engineer",
+      "salary": 700000,
+      "ctc": 900000,
+      "joiningDate": "2026-08-01",
+      "offerDate": "2026-04-05",
+      "expiryDate": "2026-04-18",
+      "status": "pending",
+      "benefits": [
+        "Health Insurance",
+        "4 weeks leave",
+        "Career Growth"
+      ],
+      "terms": "Full-time, Permanent",
+      "responseDeadline": "2026-04-18",
+      "createdAt": "2026-04-05"
+    }
+  ],
+  "mockInterviews": [
+    {
+      "id": "1",
+      "studentName": "Rahul Verma",
+      "studentRoll": "CS21001",
+      "interviewDate": "2026-01-28",
+      "interviewType": "technical",
+      "interviewer": "Dr. Amit Kumar",
+      "duration": 45,
+      "overallScore": 88,
+      "technicalScore": 90,
+      "communicationScore": 85,
+      "problemSolvingScore": 92,
+      "confidenceScore": 85,
+      "feedback": "Excellent problem-solving approach. Strong DSA knowledge. Communication clear.",
+      "strengths": [
+        "Problem Solving",
+        "DSA Knowledge",
+        "Code Quality"
+      ],
+      "improvements": [
+        "System Design",
+        "Time Complexity Analysis"
+      ],
+      "recommendation": "excellent",
+      "recordingAvailable": true
+    },
+    {
+      "id": "2",
+      "studentName": "Ananya Singh",
+      "studentRoll": "CS21002",
+      "interviewDate": "2026-01-30",
+      "interviewType": "hr",
+      "interviewer": "Ms. Priya Sharma",
+      "duration": 30,
+      "overallScore": 95,
+      "technicalScore": 0,
+      "communicationScore": 98,
+      "problemSolvingScore": 92,
+      "confidenceScore": 95,
+      "feedback": "Outstanding communication. Very confident. Handled behavioral questions excellently.",
+      "strengths": [
+        "Communication",
+        "Confidence",
+        "Professionalism",
+        "Body Language"
+      ],
+      "improvements": [],
+      "recommendation": "excellent",
+      "recordingAvailable": true
+    },
+    {
+      "id": "3",
+      "studentName": "Vikram Mehta",
+      "studentRoll": "EC21015",
+      "interviewDate": "2026-01-25",
+      "interviewType": "technical",
+      "interviewer": "Prof. Rajesh Patel",
+      "duration": 40,
+      "overallScore": 65,
+      "technicalScore": 68,
+      "communicationScore": 60,
+      "problemSolvingScore": 65,
+      "confidenceScore": 68,
+      "feedback": "Good basics but struggled with advanced concepts. Needs more practice.",
+      "strengths": [
+        "Basic Programming",
+        "Enthusiasm"
+      ],
+      "improvements": [
+        "Advanced Algorithms",
+        "Communication",
+        "Code Optimization"
+      ],
+      "recommendation": "average",
+      "recordingAvailable": false
+    },
+    {
+      "id": "4",
+      "studentName": "Kavya Reddy",
+      "studentRoll": "IT21023",
+      "interviewDate": "2026-02-01",
+      "interviewType": "behavioral",
+      "interviewer": "Ms. Neha Verma",
+      "duration": 35,
+      "overallScore": 82,
+      "technicalScore": 0,
+      "communicationScore": 88,
+      "problemSolvingScore": 80,
+      "confidenceScore": 85,
+      "feedback": "Strong leadership presence. Demonstrated good problem-solving with examples.",
+      "strengths": [
+        "Leadership",
+        "Communication",
+        "Confidence"
+      ],
+      "improvements": [
+        "Elaborating on failures"
+      ],
+      "recommendation": "good",
+      "recordingAvailable": true
+    },
+    {
+      "id": "5",
+      "studentName": "Arjun Kumar",
+      "studentRoll": "ME21045",
+      "interviewDate": "2026-01-22",
+      "interviewType": "technical",
+      "interviewer": "Dr. Suresh Kumar",
+      "duration": 40,
+      "overallScore": 55,
+      "technicalScore": 50,
+      "communicationScore": 52,
+      "problemSolvingScore": 58,
+      "confidenceScore": 50,
+      "feedback": "Basics are weak. Needs significant improvement in technical concepts and communication.",
+      "strengths": [
+        "Enthusiasm"
+      ],
+      "improvements": [
+        "Core Concepts",
+        "Communication",
+        "Problem Solving",
+        "Technical Depth"
+      ],
+      "recommendation": "needs-improvement",
+      "recordingAvailable": false
+    }
+  ],
+  "resumeBooks": [
+    {
+      "id": "1",
+      "name": "2026 CSE Branch Resume Book",
+      "batch": "2026",
+      "branch": "CSE",
+      "year": 2026,
+      "resumeCount": 142,
+      "status": "active",
+      "createdDate": "2026-01-15",
+      "updatedDate": "2026-04-10",
+      "resumes": [
+        {
+          "id": "r1",
+          "studentId": "STU00145",
+          "studentName": "Rahul Kumar",
+          "cgpa": 8.9,
+          "branch": "CSE",
+          "skills": [
+            "Python",
+            "JavaScript",
+            "React",
+            "AWS"
+          ],
+          "appliedCompanies": 12
+        },
+        {
+          "id": "r2",
+          "studentId": "STU00146",
+          "studentName": "Priya Sharma",
+          "cgpa": 9.1,
+          "branch": "CSE",
+          "skills": [
+            "Java",
+            "Spring Boot",
+            "Microservices",
+            "Docker"
+          ],
+          "appliedCompanies": 15
+        },
+        {
+          "id": "r3",
+          "studentId": "STU00147",
+          "studentName": "Amit Patel",
+          "cgpa": 8.5,
+          "branch": "CSE",
+          "skills": [
+            "C++",
+            "Data Structures",
+            "System Design"
+          ],
+          "appliedCompanies": 10
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "2026 IT Branch Resume Book",
+      "batch": "2026",
+      "branch": "IT",
+      "year": 2026,
+      "resumeCount": 98,
+      "status": "active",
+      "createdDate": "2026-01-15",
+      "updatedDate": "2026-04-08",
+      "resumes": [
+        {
+          "id": "r4",
+          "studentId": "STU00200",
+          "studentName": "Deepak Verma",
+          "cgpa": 8.7,
+          "branch": "IT",
+          "skills": [
+            "Python",
+            "Django",
+            "PostgreSQL",
+            "Linux"
+          ],
+          "appliedCompanies": 11
+        },
+        {
+          "id": "r5",
+          "studentId": "STU00201",
+          "studentName": "Sneha Gupta",
+          "cgpa": 9.2,
+          "branch": "IT",
+          "skills": [
+            "Full Stack",
+            "MERN",
+            "Cloud Computing"
+          ],
+          "appliedCompanies": 14
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "2026 ECE Branch Resume Book",
+      "batch": "2026",
+      "branch": "ECE",
+      "year": 2026,
+      "resumeCount": 76,
+      "status": "active",
+      "createdDate": "2026-01-15",
+      "updatedDate": "2026-04-05",
+      "resumes": [
+        {
+          "id": "r6",
+          "studentId": "STU00300",
+          "studentName": "Vikas Reddy",
+          "cgpa": 8.3,
+          "branch": "ECE",
+          "skills": [
+            "Signal Processing",
+            "VLSI",
+            "Embedded Systems"
+          ],
+          "appliedCompanies": 8
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "2025 CSE Branch Resume Book",
+      "batch": "2025",
+      "branch": "CSE",
+      "year": 2025,
+      "resumeCount": 156,
+      "status": "archived",
+      "createdDate": "2025-01-10",
+      "updatedDate": "2025-12-20",
+      "resumes": []
+    },
+    {
+      "id": "5",
+      "name": "2025 IT Branch Resume Book",
+      "batch": "2025",
+      "branch": "IT",
+      "year": 2025,
+      "resumeCount": 112,
+      "status": "archived",
+      "createdDate": "2025-01-10",
+      "updatedDate": "2025-12-15",
+      "resumes": []
+    },
+    {
+      "id": "6",
+      "name": "2024 CSE Branch Resume Book",
+      "batch": "2024",
+      "branch": "CSE",
+      "year": 2024,
+      "resumeCount": 189,
+      "status": "archived",
+      "createdDate": "2024-01-08",
+      "updatedDate": "2024-12-10",
+      "resumes": []
+    }
+  ],
+  "studentsReadiness": [
+    {
+      "id": "1",
+      "name": "Rahul Verma",
+      "rollNumber": "CS21001",
+      "branch": "Computer Science",
+      "cgpa": 8.5,
+      "backlogs": 0,
+      "resumeScore": 85,
+      "technicalSkills": 90,
+      "aptitudeScore": 88,
+      "communicationScore": 82,
+      "mockInterviewsAttended": 5,
+      "averageMockScore": 86,
+      "placementReadiness": "high",
+      "areasOfImprovement": [
+        "System Design"
+      ],
+      "lastAssessment": "2026-01-28",
+      "companiesApplied": 12,
+      "interviewsScheduled": 3
+    },
+    {
+      "id": "2",
+      "name": "Ananya Singh",
+      "rollNumber": "CS21002",
+      "branch": "Computer Science",
+      "cgpa": 9.2,
+      "backlogs": 0,
+      "resumeScore": 92,
+      "technicalSkills": 95,
+      "aptitudeScore": 94,
+      "communicationScore": 90,
+      "mockInterviewsAttended": 7,
+      "averageMockScore": 93,
+      "placementReadiness": "high",
+      "areasOfImprovement": [],
+      "lastAssessment": "2026-01-30",
+      "companiesApplied": 15,
+      "interviewsScheduled": 5
+    },
+    {
+      "id": "3",
+      "name": "Vikram Mehta",
+      "rollNumber": "EC21015",
+      "branch": "Electronics",
+      "cgpa": 7.2,
+      "backlogs": 1,
+      "resumeScore": 65,
+      "technicalSkills": 70,
+      "aptitudeScore": 68,
+      "communicationScore": 60,
+      "mockInterviewsAttended": 2,
+      "averageMockScore": 64,
+      "placementReadiness": "medium",
+      "areasOfImprovement": [
+        "Resume Quality",
+        "Communication",
+        "Technical Depth"
+      ],
+      "lastAssessment": "2026-01-25",
+      "companiesApplied": 5,
+      "interviewsScheduled": 1
+    },
+    {
+      "id": "4",
+      "name": "Kavya Reddy",
+      "rollNumber": "IT21023",
+      "branch": "IT",
+      "cgpa": 8.8,
+      "backlogs": 0,
+      "resumeScore": 88,
+      "technicalSkills": 92,
+      "aptitudeScore": 90,
+      "communicationScore": 88,
+      "mockInterviewsAttended": 6,
+      "averageMockScore": 89,
+      "placementReadiness": "high",
+      "areasOfImprovement": [
+        "Leadership Skills"
+      ],
+      "lastAssessment": "2026-01-29",
+      "companiesApplied": 14,
+      "interviewsScheduled": 4
+    },
+    {
+      "id": "5",
+      "name": "Arjun Kumar",
+      "rollNumber": "ME21045",
+      "branch": "Mechanical",
+      "cgpa": 6.8,
+      "backlogs": 2,
+      "resumeScore": 55,
+      "technicalSkills": 60,
+      "aptitudeScore": 58,
+      "communicationScore": 50,
+      "mockInterviewsAttended": 1,
+      "averageMockScore": 52,
+      "placementReadiness": "low",
+      "areasOfImprovement": [
+        "Resume Building",
+        "Technical Skills",
+        "Soft Skills",
+        "Backlogs Clearing"
+      ],
+      "lastAssessment": "2026-01-20",
+      "companiesApplied": 2,
+      "interviewsScheduled": 0
+    }
   ]
 }

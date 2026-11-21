@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 interface BlockedOffer {
   companyName: string;
@@ -40,11 +41,11 @@ interface EnforcedPolicy {
 
 /**
  * One-Offer Policy Controller
- * Enforces single offer per student policy
+ * Enforces single offer per student policy with disk persistence
  */
 export class OneOfferPolicyController {
   public router: Router;
-  private policies: EnforcedPolicy[] = [
+  private static defaultPolicies: EnforcedPolicy[] = [
     {
       id: '1',
       studentId: 'STU00145',
@@ -219,7 +220,7 @@ export class OneOfferPolicyController {
   private async getAllPolicies(req: Request, res: Response): Promise<void> {
     const { status, search } = req.query;
 
-    let filtered = [...this.policies];
+    let filtered = [...LocalStore.get<EnforcedPolicy>('oneOfferPolicies', OneOfferPolicyController.defaultPolicies)];
 
     if (status) {
       filtered = filtered.filter(p => p.status === status);
@@ -283,7 +284,7 @@ export class OneOfferPolicyController {
       status: 'active',
     };
 
-    this.policies.push(newPolicy);
+    LocalStore.insert('oneOfferPolicies', newPolicy);
 
     res.status(201).json({
       success: true,
@@ -294,7 +295,8 @@ export class OneOfferPolicyController {
 
   private async getPolicyById(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
-    const policy = this.policies.find(p => p.id === policyId);
+    const policies = LocalStore.get<EnforcedPolicy>('oneOfferPolicies', OneOfferPolicyController.defaultPolicies);
+    const policy = policies.find(p => p.id === policyId);
 
     if (!policy) {
       res.status(404).json({
@@ -312,18 +314,15 @@ export class OneOfferPolicyController {
 
   private async updatePolicy(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
-    const policyIdx = this.policies.findIndex(p => p.id === policyId);
+    const updated = LocalStore.update<EnforcedPolicy>('oneOfferPolicies', 'id', policyId, req.body);
 
-    if (policyIdx === -1) {
+    if (!updated) {
       res.status(404).json({
         success: false,
         error: 'Policy not found',
       });
       return;
     }
-
-    const updated = { ...this.policies[policyIdx], ...req.body, id: policyId };
-    this.policies[policyIdx] = updated;
 
     res.json({
       success: true,
@@ -334,10 +333,9 @@ export class OneOfferPolicyController {
 
   private async deletePolicy(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
-    const initialLength = this.policies.length;
-    this.policies = this.policies.filter(p => p.id !== policyId);
+    const deleted = LocalStore.delete('oneOfferPolicies', 'id', policyId);
 
-    if (this.policies.length === initialLength) {
+    if (!deleted) {
       res.status(404).json({
         success: false,
         error: 'Policy not found',
@@ -353,7 +351,8 @@ export class OneOfferPolicyController {
 
   private async getByStatus(req: Request, res: Response): Promise<void> {
     const { status } = req.params;
-    const filtered = this.policies.filter(p => p.status === status);
+    const policies = LocalStore.get<EnforcedPolicy>('oneOfferPolicies', OneOfferPolicyController.defaultPolicies);
+    const filtered = policies.filter(p => p.status === status);
 
     res.json({
       success: true,
@@ -366,9 +365,19 @@ export class OneOfferPolicyController {
   private async submitAppeal(req: Request, res: Response): Promise<void> {
     const { policyId } = req.params;
     const { reason } = req.body;
-    const policy = this.policies.find(p => p.id === policyId);
 
-    if (!policy) {
+    const appealDetails = {
+      reason,
+      submittedDate: new Date().toISOString().split('T')[0],
+      status: 'pending' as const,
+    };
+
+    const updated = LocalStore.update<EnforcedPolicy>('oneOfferPolicies', 'id', policyId, {
+      appealDetails,
+      status: 'appeal-pending',
+    });
+
+    if (!updated) {
       res.status(404).json({
         success: false,
         error: 'Policy not found',
@@ -376,23 +385,17 @@ export class OneOfferPolicyController {
       return;
     }
 
-    policy.appealDetails = {
-      reason,
-      submittedDate: new Date().toISOString().split('T')[0],
-      status: 'pending',
-    };
-    policy.status = 'appeal-pending';
-
     res.json({
       success: true,
-      data: policy,
+      data: updated,
       message: 'Appeal submitted successfully. Admin will review within 24 hours.',
     });
   }
 
   private async resolveAppeal(req: Request, res: Response): Promise<void> {
     const { policyId, appealStatus } = req.params;
-    const policy = this.policies.find(p => p.id === policyId);
+    const policies = LocalStore.get<EnforcedPolicy>('oneOfferPolicies', OneOfferPolicyController.defaultPolicies);
+    const policy = policies.find(p => p.id === policyId);
 
     if (!policy) {
       res.status(404).json({
@@ -410,36 +413,44 @@ export class OneOfferPolicyController {
       return;
     }
 
-    policy.appealDetails.status = appealStatus as 'pending' | 'approved' | 'rejected';
+    const updates: Partial<EnforcedPolicy> = {
+      appealDetails: {
+        ...policy.appealDetails,
+        status: appealStatus as 'pending' | 'approved' | 'rejected',
+      },
+    };
 
     if (appealStatus === 'approved') {
-      policy.status = 'exception-approved';
-      policy.impact = {
+      updates.status = 'exception-approved';
+      updates.impact = {
         studentBenefit: 'Exception approved by admin. Student can now accept alternative offer.',
         reasonForException: 'Appeal reviewed and approved by placement coordinator.',
       };
     } else if (appealStatus === 'rejected') {
-      policy.status = 'active';
-      policy.impact = undefined;
+      updates.status = 'active';
+      updates.impact = undefined;
     }
+
+    const updated = LocalStore.update<EnforcedPolicy>('oneOfferPolicies', 'id', policyId, updates);
 
     res.json({
       success: true,
-      data: policy,
+      data: updated,
       message: `Appeal ${appealStatus} successfully`,
     });
   }
 
   private async getAnalytics(_req: Request, res: Response): Promise<void> {
-    const active = this.policies.filter(p => p.status === 'active').length;
-    const completed = this.policies.filter(p => p.status === 'completed').length;
-    const appealPending = this.policies.filter(p => p.status === 'appeal-pending').length;
-    const exceptionApproved = this.policies.filter(p => p.status === 'exception-approved').length;
+    const policies = LocalStore.get<EnforcedPolicy>('oneOfferPolicies', OneOfferPolicyController.defaultPolicies);
+    const active = policies.filter(p => p.status === 'active').length;
+    const completed = policies.filter(p => p.status === 'completed').length;
+    const appealPending = policies.filter(p => p.status === 'appeal-pending').length;
+    const exceptionApproved = policies.filter(p => p.status === 'exception-approved').length;
 
-    const totalBlocked = this.policies.reduce((sum, p) => sum + p.blockedOffers.length, 0);
-    const totalOffers = this.policies.length;
+    const totalBlocked = policies.reduce((sum, p) => sum + p.blockedOffers.length, 0);
+    const totalOffers = policies.length || 1;
 
-    const topCompaniesBlocked = this.policies
+    const topCompaniesBlocked = policies
       .flatMap(p => p.blockedOffers)
       .reduce(
         (acc, offer) => {
@@ -456,12 +467,14 @@ export class OneOfferPolicyController {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    const avgPackagesAccepted = this.policies.reduce((sum, p) => sum + p.currentOffer.ctc, 0) / this.policies.length;
+    const avgPackagesAccepted = policies.length
+      ? policies.reduce((sum, p) => sum + p.currentOffer.ctc, 0) / policies.length
+      : 0;
 
     res.json({
       success: true,
       data: {
-        totalPoliciesEnforced: this.policies.length,
+        totalPoliciesEnforced: policies.length,
         activeEnforcement: active,
         completedEnforcement: completed,
         appealsSubmitted: appealPending,

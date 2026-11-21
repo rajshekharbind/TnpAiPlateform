@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '@api/middleware/error.middleware';
+import { LocalStore } from '@core/database/LocalStore';
 
 interface BlacklistEntry {
   id: string;
@@ -23,11 +24,11 @@ interface BlacklistEntry {
 
 /**
  * Blacklist Management Controller
- * Manages blocked candidates and blacklist entries
+ * Manages blocked candidates and blacklist entries with persistent database store
  */
 export class BlacklistController {
   public router: Router;
-  private blacklist: BlacklistEntry[] = [
+  private static defaultBlacklist: BlacklistEntry[] = [
     {
       id: '1',
       studentId: 'STU00145',
@@ -163,7 +164,7 @@ export class BlacklistController {
   private async getBlacklist(req: Request, res: Response): Promise<void> {
     const { status, severity, search } = req.query;
 
-    let filtered = [...this.blacklist];
+    let filtered = [...LocalStore.get<BlacklistEntry>('blacklist', BlacklistController.defaultBlacklist)];
 
     if (status) {
       filtered = filtered.filter(e => e.status === status);
@@ -228,7 +229,7 @@ export class BlacklistController {
       status: 'active',
     };
 
-    this.blacklist.push(newEntry);
+    LocalStore.insert('blacklist', newEntry);
 
     res.status(201).json({
       success: true,
@@ -239,7 +240,8 @@ export class BlacklistController {
 
   private async getBlacklistById(req: Request, res: Response): Promise<void> {
     const { entryId } = req.params;
-    const entry = this.blacklist.find(e => e.id === entryId);
+    const list = LocalStore.get<BlacklistEntry>('blacklist', BlacklistController.defaultBlacklist);
+    const entry = list.find(e => e.id === entryId);
 
     if (!entry) {
       res.status(404).json({
@@ -257,18 +259,15 @@ export class BlacklistController {
 
   private async updateBlacklistEntry(req: Request, res: Response): Promise<void> {
     const { entryId } = req.params;
-    const entryIdx = this.blacklist.findIndex(e => e.id === entryId);
+    const updated = LocalStore.update<BlacklistEntry>('blacklist', 'id', entryId, req.body);
 
-    if (entryIdx === -1) {
+    if (!updated) {
       res.status(404).json({
         success: false,
         error: 'Blacklist entry not found',
       });
       return;
     }
-
-    const updated = { ...this.blacklist[entryIdx], ...req.body, id: entryId };
-    this.blacklist[entryIdx] = updated;
 
     res.json({
       success: true,
@@ -279,10 +278,9 @@ export class BlacklistController {
 
   private async removeFromBlacklist(req: Request, res: Response): Promise<void> {
     const { entryId } = req.params;
-    const initialLength = this.blacklist.length;
-    this.blacklist = this.blacklist.filter(e => e.id !== entryId);
+    const deleted = LocalStore.delete('blacklist', 'id', entryId);
 
-    if (this.blacklist.length === initialLength) {
+    if (!deleted) {
       res.status(404).json({
         success: false,
         error: 'Blacklist entry not found',
@@ -299,9 +297,9 @@ export class BlacklistController {
   private async updateStatus(req: Request, res: Response): Promise<void> {
     const { entryId } = req.params;
     const { status } = req.body;
-    const entry = this.blacklist.find(e => e.id === entryId);
+    const updated = LocalStore.update<BlacklistEntry>('blacklist', 'id', entryId, { status });
 
-    if (!entry) {
+    if (!updated) {
       res.status(404).json({
         success: false,
         error: 'Blacklist entry not found',
@@ -309,18 +307,17 @@ export class BlacklistController {
       return;
     }
 
-    entry.status = status;
-
     res.json({
       success: true,
-      data: entry,
+      data: updated,
       message: 'Status updated successfully',
     });
   }
 
   private async getBysSeverity(req: Request, res: Response): Promise<void> {
     const { severity } = req.params;
-    const filtered = this.blacklist.filter(e => e.severity === severity);
+    const list = LocalStore.get<BlacklistEntry>('blacklist', BlacklistController.defaultBlacklist);
+    const filtered = list.filter(e => e.severity === severity);
 
     res.json({
       success: true,
@@ -332,7 +329,8 @@ export class BlacklistController {
 
   private async getByCompany(req: Request, res: Response): Promise<void> {
     const { companyName } = req.params;
-    const filtered = this.blacklist.filter(e => e.companyName.toLowerCase() === companyName.toLowerCase());
+    const list = LocalStore.get<BlacklistEntry>('blacklist', BlacklistController.defaultBlacklist);
+    const filtered = list.filter(e => e.companyName.toLowerCase() === companyName.toLowerCase());
 
     res.json({
       success: true,
@@ -345,9 +343,18 @@ export class BlacklistController {
   private async submitAppeal(req: Request, res: Response): Promise<void> {
     const { entryId } = req.params;
     const { appealReason } = req.body;
-    const entry = this.blacklist.find(e => e.id === entryId);
 
-    if (!entry) {
+    const appealDetails = {
+      appealDate: new Date().toISOString().split('T')[0],
+      appealReason,
+      appealStatus: 'pending' as const,
+    };
+    const updated = LocalStore.update<BlacklistEntry>('blacklist', 'id', entryId, {
+      appealDetails,
+      status: 'appealed',
+    });
+
+    if (!updated) {
       res.status(404).json({
         success: false,
         error: 'Blacklist entry not found',
@@ -355,31 +362,25 @@ export class BlacklistController {
       return;
     }
 
-    entry.appealDetails = {
-      appealDate: new Date().toISOString().split('T')[0],
-      appealReason,
-      appealStatus: 'pending',
-    };
-    entry.status = 'appealed';
-
     res.json({
       success: true,
-      data: entry,
+      data: updated,
       message: 'Appeal submitted successfully. Admin will review it shortly.',
     });
   }
 
   private async getAnalytics(_req: Request, res: Response): Promise<void> {
-    const active = this.blacklist.filter(e => e.status === 'active').length;
-    const expired = this.blacklist.filter(e => e.status === 'expired').length;
-    const appealed = this.blacklist.filter(e => e.status === 'appealed').length;
-    const critical = this.blacklist.filter(e => e.severity === 'critical').length;
+    const list = LocalStore.get<BlacklistEntry>('blacklist', BlacklistController.defaultBlacklist);
+    const active = list.filter(e => e.status === 'active').length;
+    const expired = list.filter(e => e.status === 'expired').length;
+    const appealed = list.filter(e => e.status === 'appealed').length;
+    const critical = list.filter(e => e.severity === 'critical').length;
 
-    const recentBlacklist = this.blacklist
+    const recentBlacklist = [...list]
       .sort((a, b) => new Date(b.dateBlacklisted).getTime() - new Date(a.dateBlacklisted).getTime())
       .slice(0, 5);
 
-    const byCompany = this.blacklist.reduce(
+    const byCompany = list.reduce(
       (acc, entry) => {
         const existing = acc.find(c => c.company === entry.companyName);
         if (existing) {
@@ -395,7 +396,7 @@ export class BlacklistController {
     res.json({
       success: true,
       data: {
-        totalBlacklisted: this.blacklist.length,
+        totalBlacklisted: list.length,
         activeBlacklist: active,
         expiredBlacklist: expired,
         appealedBlacklist: appealed,
