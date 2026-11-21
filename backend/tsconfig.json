@@ -72,7 +72,6 @@
     "src/modules/interview-rooms/**/*",
     "src/modules/oa-tests/**/*",
     "src/modules/scoring/**/*",
-    "src/modules/submissions/**/*",
-    "src/api/routes/live-coding.routes.ts"
+    "src/modules/submissions/**/*"
   ]
 }
