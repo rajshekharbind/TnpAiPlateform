@@ -6,6 +6,10 @@ This repository contains **both backend and frontend** code with clear setup ins
 
 ---
 
+
+<img width="8643" height="7214" alt="diagram (1)" src="https://github.com/user-attachments/assets/e65386b8-7832-4eaf-b662-b2949d17d1bd" />
+
+
 ## 🚀 Overview
 
 The **TnP AI Platform** simplifies placement operations by providing:
